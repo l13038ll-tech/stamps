@@ -1,73 +1,129 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>お気に入り店舗コレクション</title>
+    <!-- スマホアプリのように画面を固定する設定 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Magic Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
+        * { box-sizing: border-box; }
         body { 
-            font-family: 'Helvetica Neue', Arial, sans-serif; 
-            background-color: #FFF5F7; /* パステルピンク背景 */
-            padding: 20px; 
-            display: flex; flex-direction: column; align-items: center;
+            margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; 
+            background: linear-gradient(135deg, #0a0f25, #1e1b4b, #2e1065);
+            color: #ffffff; min-height: 100vh; overscroll-behavior-y: none;
         }
-        h2 { color: #FF9AA2; text-shadow: 1px 1px #fff; }
-        .store-item { 
-            display: flex; align-items: center; gap: 10px; margin: 10px 0; 
+        /* ヘッダー */
+        .header { 
+            position: fixed; top: 0; width: 100%; text-align: center; padding: 20px; 
+            font-size: 22px; font-weight: bold; letter-spacing: 2px;
+            background: rgba(10, 15, 37, 0.6); backdrop-filter: blur(10px); 
+            border-bottom: 1px solid rgba(255,215,0,0.2); 
+            color: #FFD700; z-index: 100;
         }
-        .store-btn { 
-            background-color: #B5EAD7; /* パステルミント */
-            border: none; border-radius: 20px; padding: 15px 25px; 
-            font-weight: bold; color: #555; cursor: pointer; box-shadow: 2px 2px 5px #ddd;
+        /* カード一覧エリア */
+        #card-container { 
+            padding: 80px 20px 100px; display: flex; flex-direction: column; gap: 15px; 
         }
-        .update-btn { 
-            background-color: #FFDAC1; /* パステルオレンジ */
-            border: none; border-radius: 15px; padding: 10px; cursor: pointer; color: #fff;
+        /* チケット風カード */
+        .card { 
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 20px; backdrop-filter: blur(12px);
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5); position: relative; overflow: hidden;
         }
-        #register-area { 
-            margin-top: 40px; padding: 20px; border: 2px dashed #C7CEEA; 
-            border-radius: 20px; background: #fff; text-align: center;
+        .card::before { 
+            content: '✨'; position: absolute; top: -10px; right: -10px; 
+            font-size: 50px; opacity: 0.1; 
+        }
+        .card-info { flex-grow: 1; margin-right: 15px; }
+        .card-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .card-url { font-size: 10px; color: #aaa; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 150px; }
+        
+        /* ボタン類 */
+        .btn-jump { 
+            background: linear-gradient(45deg, #FFD700, #FFA500); color: #000;
+            border: none; border-radius: 25px; padding: 12px 20px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255,215,0,0.3); cursor: pointer; white-space: nowrap;
+        }
+        .btn-update { 
+            background: rgba(255,255,255,0.1); border: 1px solid #FFD700; color: #FFD700; 
+            border-radius: 50%; width: 45px; height: 45px; display: flex; 
+            align-items: center; justify-content: center; font-size: 20px; margin-left: 10px; cursor: pointer;
+        }
+        
+        /* 画面右下の追加ボタン（FAB） */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 65px; height: 65px; border-radius: 50%;
+            background: linear-gradient(135deg, #FFD700, #ff8c00);
+            color: #000; font-size: 35px; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 5px 25px rgba(255,215,0,0.6); border: none; cursor: pointer; z-index: 1000;
+        }
+
+        /* 入力用モーダル（ポップアップ） */
+        .modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; 
+            backdrop-filter: blur(5px); 
+        }
+        .modal-content { 
+            background: #1e1b4b; border: 1px solid #FFD700; padding: 30px; 
+            border-radius: 20px; width: 85%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        .modal input[type="text"] { 
+            width: 100%; padding: 15px; border-radius: 12px; border: none; 
+            margin: 20px 0; font-size: 16px; background: rgba(255,255,255,0.9); color: #000;
         }
     </style>
 </head>
 <body>
-    <h2>♡ お気に入り店舗 ♡</h2>
-    <div id="button-container"></div>
+    <div class="header">Magic Portal ✨</div>
+    
+    <div id="card-container"></div>
 
-    <div id="register-area">
-        <h3>新規登録</h3>
-        <input type="file" id="qr-input" accept="image/*">
-        <div id="input-area" style="display:none;">
-            <p>URL: <span id="scanned-url" style="font-size: 0.8em;"></span></p>
-            <input type="text" id="store-name" placeholder="店舗名">
-            <button onclick="saveStore()">追加</button>
-        </div>
-    </div>
+    <!-- 追加ボタン（画面右下に固定） -->
+    <button class="fab" onclick="document.getElementById('qr-input').click()">+</button>
 
-    <!-- 更新用隠しインプット -->
+    <!-- 裏で動くファイル選択とキャンバス -->
+    <input type="file" id="qr-input" style="display:none" accept="image/*">
     <input type="file" id="update-qr-input" style="display:none" accept="image/*">
     <canvas id="canvas" style="display:none;"></canvas>
 
+    <!-- 登録用ポップアップ -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:#FFD700; margin-top:0;">新しいパスを追加</h3>
+            <p style="font-size:11px; color:#ccc; word-break:break-all;" id="scanned-url"></p>
+            <input type="text" id="spot-name" placeholder="タイトル (例: お城のマップ)">
+            <button class="btn-jump" style="width:100%; font-size:16px;" onclick="saveSpot()">魔法をかける</button>
+        </div>
+    </div>
+
     <script>
         let updatingIndex = -1;
-        window.onload = loadStores;
+        window.onload = loadSpots;
 
-        // 新規登録QR読み取り
+        // 新規追加時のQR読み取り
         document.getElementById('qr-input').addEventListener('change', (e) => handleQR(e.target.files[0], (url) => {
             document.getElementById('scanned-url').textContent = url;
-            document.getElementById('input-area').style.display = 'block';
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('qr-input').value = ''; // リセット
         }));
 
-        // 更新用QR読み取り
+        // 更新時のQR読み取り
         document.getElementById('update-qr-input').addEventListener('change', (e) => handleQR(e.target.files[0], (url) => {
-            const stores = JSON.parse(localStorage.getItem('stores'));
-            stores[updatingIndex].url = url;
-            localStorage.setItem('stores', JSON.stringify(stores));
-            loadStores();
+            const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
+            spots[updatingIndex].url = url;
+            localStorage.setItem('magic_spots', JSON.stringify(spots));
+            document.getElementById('update-qr-input').value = ''; // リセット
+            loadSpots();
+            alert('URLを更新しました✨');
         }));
 
+        // QRコード解析の共通処理
         function handleQR(file, callback) {
+            if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
@@ -77,37 +133,54 @@
                     canvas.width = img.width; canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
                     const code = jsQR(ctx.getImageData(0,0,img.width,img.height).data, img.width, img.height);
-                    if (code) callback(code.data); else alert('QRが見つかりませんでした');
+                    if (code && code.data.startsWith('http')) {
+                        callback(code.data);
+                    } else {
+                        alert('有効なURLを含むQRコードが見つかりませんでした。');
+                    }
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
-        function saveStore() {
-            const name = document.getElementById('store-name').value;
+        // 保存処理
+        function saveSpot() {
+            const name = document.getElementById('spot-name').value;
             const url = document.getElementById('scanned-url').textContent;
-            const stores = JSON.parse(localStorage.getItem('stores') || '[]');
-            stores.push({ name, url });
-            localStorage.setItem('stores', JSON.stringify(stores));
-            location.reload();
+            if (!name) { alert('タイトルを入力してください。'); return; }
+
+            const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
+            spots.push({ name, url });
+            localStorage.setItem('magic_spots', JSON.stringify(spots));
+            
+            document.getElementById('spot-name').value = '';
+            document.getElementById('modal').style.display = 'none';
+            loadSpots();
         }
 
-        function loadStores() {
-            const container = document.getElementById('button-container');
+        // カード生成処理
+        function loadSpots() {
+            const container = document.getElementById('card-container');
             container.innerHTML = '';
-            const stores = JSON.parse(localStorage.getItem('stores') || '[]');
-            stores.forEach((store, index) => {
+            const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
+            
+            spots.forEach((spot, index) => {
                 const div = document.createElement('div');
-                div.className = 'store-item';
+                div.className = 'card';
                 div.innerHTML = `
-                    <button class="store-btn" onclick="window.location.href='${store.url}'">${store.name}</button>
-                    <button class="update-btn" onclick="startUpdate(${index})">🔄更新</button>
+                    <div class="card-info">
+                        <div class="card-title">${spot.name}</div>
+                        <div class="card-url">${spot.url}</div>
+                    </div>
+                    <button class="btn-jump" onclick="window.location.href='${spot.url}'">開く</button>
+                    <button class="btn-update" onclick="startUpdate(${index})">🔄</button>
                 `;
                 container.appendChild(div);
             });
         }
 
+        // 更新開始
         function startUpdate(index) {
             updatingIndex = index;
             document.getElementById('update-qr-input').click();
