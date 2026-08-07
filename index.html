@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>お気に入り店舗コレクション</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            background-color: #FFF5F7; /* パステルピンク背景 */
+            padding: 20px; 
+            display: flex; flex-direction: column; align-items: center;
+        }
+        h2 { color: #FF9AA2; text-shadow: 1px 1px #fff; }
+        .store-item { 
+            display: flex; align-items: center; gap: 10px; margin: 10px 0; 
+        }
+        .store-btn { 
+            background-color: #B5EAD7; /* パステルミント */
+            border: none; border-radius: 20px; padding: 15px 25px; 
+            font-weight: bold; color: #555; cursor: pointer; box-shadow: 2px 2px 5px #ddd;
+        }
+        .update-btn { 
+            background-color: #FFDAC1; /* パステルオレンジ */
+            border: none; border-radius: 15px; padding: 10px; cursor: pointer; color: #fff;
+        }
+        #register-area { 
+            margin-top: 40px; padding: 20px; border: 2px dashed #C7CEEA; 
+            border-radius: 20px; background: #fff; text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>♡ お気に入り店舗 ♡</h2>
+    <div id="button-container"></div>
+
+    <div id="register-area">
+        <h3>新規登録</h3>
+        <input type="file" id="qr-input" accept="image/*">
+        <div id="input-area" style="display:none;">
+            <p>URL: <span id="scanned-url" style="font-size: 0.8em;"></span></p>
+            <input type="text" id="store-name" placeholder="店舗名">
+            <button onclick="saveStore()">追加</button>
+        </div>
+    </div>
+
+    <!-- 更新用隠しインプット -->
+    <input type="file" id="update-qr-input" style="display:none" accept="image/*">
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        let updatingIndex = -1;
+        window.onload = loadStores;
+
+        // 新規登録QR読み取り
+        document.getElementById('qr-input').addEventListener('change', (e) => handleQR(e.target.files[0], (url) => {
+            document.getElementById('scanned-url').textContent = url;
+            document.getElementById('input-area').style.display = 'block';
+        }));
+
+        // 更新用QR読み取り
+        document.getElementById('update-qr-input').addEventListener('change', (e) => handleQR(e.target.files[0], (url) => {
+            const stores = JSON.parse(localStorage.getItem('stores'));
+            stores[updatingIndex].url = url;
+            localStorage.setItem('stores', JSON.stringify(stores));
+            loadStores();
+        }));
+
+        function handleQR(file, callback) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.getElementById('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width; canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const code = jsQR(ctx.getImageData(0,0,img.width,img.height).data, img.width, img.height);
+                    if (code) callback(code.data); else alert('QRが見つかりませんでした');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveStore() {
+            const name = document.getElementById('store-name').value;
+            const url = document.getElementById('scanned-url').textContent;
+            const stores = JSON.parse(localStorage.getItem('stores') || '[]');
+            stores.push({ name, url });
+            localStorage.setItem('stores', JSON.stringify(stores));
+            location.reload();
+        }
+
+        function loadStores() {
+            const container = document.getElementById('button-container');
+            container.innerHTML = '';
+            const stores = JSON.parse(localStorage.getItem('stores') || '[]');
+            stores.forEach((store, index) => {
+                const div = document.createElement('div');
+                div.className = 'store-item';
+                div.innerHTML = `
+                    <button class="store-btn" onclick="window.location.href='${store.url}'">${store.name}</button>
+                    <button class="update-btn" onclick="startUpdate(${index})">🔄更新</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function startUpdate(index) {
+            updatingIndex = index;
+            document.getElementById('update-qr-input').click();
+        }
+    </script>
+</body>
+</html>
