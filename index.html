@@ -1,190 +1,508 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <!-- スマホアプリのように画面を固定する設定 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magic Portal</title>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <style>
-        * { box-sizing: border-box; }
-        body { 
-            margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; 
-            background: linear-gradient(135deg, #0a0f25, #1e1b4b, #2e1065);
-            color: #ffffff; min-height: 100vh; overscroll-behavior-y: none;
-        }
-        /* ヘッダー */
-        .header { 
-            position: fixed; top: 0; width: 100%; text-align: center; padding: 20px; 
-            font-size: 22px; font-weight: bold; letter-spacing: 2px;
-            background: rgba(10, 15, 37, 0.6); backdrop-filter: blur(10px); 
-            border-bottom: 1px solid rgba(255,215,0,0.2); 
-            color: #FFD700; z-index: 100;
-        }
-        /* カード一覧エリア */
-        #card-container { 
-            padding: 80px 20px 100px; display: flex; flex-direction: column; gap: 15px; 
-        }
-        /* チケット風カード */
-        .card { 
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px; padding: 20px; backdrop-filter: blur(12px);
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5); position: relative; overflow: hidden;
-        }
-        .card::before { 
-            content: '✨'; position: absolute; top: -10px; right: -10px; 
-            font-size: 50px; opacity: 0.1; 
-        }
-        .card-info { flex-grow: 1; margin-right: 15px; }
-        .card-title { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-        .card-url { font-size: 10px; color: #aaa; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 150px; }
-        
-        /* ボタン類 */
-        .btn-jump { 
-            background: linear-gradient(45deg, #FFD700, #FFA500); color: #000;
-            border: none; border-radius: 25px; padding: 12px 20px; font-weight: bold;
-            box-shadow: 0 4px 15px rgba(255,215,0,0.3); cursor: pointer; white-space: nowrap;
-        }
-        .btn-update { 
-            background: rgba(255,255,255,0.1); border: 1px solid #FFD700; color: #FFD700; 
-            border-radius: 50%; width: 45px; height: 45px; display: flex; 
-            align-items: center; justify-content: center; font-size: 20px; margin-left: 10px; cursor: pointer;
-        }
-        
-        /* 画面右下の追加ボタン（FAB） */
-        .fab {
-            position: fixed; bottom: 30px; right: 30px;
-            width: 65px; height: 65px; border-radius: 50%;
-            background: linear-gradient(135deg, #FFD700, #ff8c00);
-            color: #000; font-size: 35px; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 5px 25px rgba(255,215,0,0.6); border: none; cursor: pointer; z-index: 1000;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ふしぎポータル</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+  :root{
+    --accent:#FF3B6E;
+    --accent-dim:rgba(255,59,110,0.12);
+    --gold:#FF9500;
+    --gold-dim:rgba(255,149,0,0.14);
+    --bg:#F2F2F7;
+    --card:#FFFFFF;
+    --label:#1C1C1E;
+    --label2:#8E8E93;
+    --sep:rgba(60,60,67,0.29);
+    --fill:rgba(120,120,128,0.12);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; overscroll-behavior-y:none; }
+  body{
+    margin:0; color:var(--label); background:var(--bg); min-height:100vh;
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "M PLUS Rounded 1c", sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
 
-        /* 入力用モーダル（ポップアップ） */
-        .modal { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; 
-            backdrop-filter: blur(5px); 
-        }
-        .modal-content { 
-            background: #1e1b4b; border: 1px solid #FFD700; padding: 30px; 
-            border-radius: 20px; width: 85%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-        }
-        .modal input[type="text"] { 
-            width: 100%; padding: 15px; border-radius: 12px; border: none; 
-            margin: 20px 0; font-size: 16px; background: rgba(255,255,255,0.9); color: #000;
-        }
-    </style>
+  /* nav bar */
+  .navbar{
+    position:fixed; top:0; width:100%; z-index:100;
+    padding:calc(env(safe-area-inset-top) + 8px) 20px 12px;
+    background:rgba(242,242,247,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border-bottom:0.5px solid var(--sep);
+  }
+  .navbar-row{ display:flex; align-items:flex-start; justify-content:space-between; }
+  .nav-title{ font-size:30px; font-weight:800; letter-spacing:-0.4px; line-height:1.15; }
+  .nav-sub{ font-size:13px; color:var(--label2); margin-top:2px; font-weight:500; }
+  .coin-badge{
+    display:flex; align-items:center; gap:4px; background:var(--gold-dim);
+    color:var(--gold); font-weight:700; font-size:14px; border-radius:14px;
+    padding:6px 10px; margin-top:2px; white-space:nowrap;
+  }
+  .coin-badge.bump{ animation:coin-bump 0.35s ease; }
+  @keyframes coin-bump{ 0%{transform:scale(1);} 45%{transform:scale(1.18);} 100%{transform:scale(1);} }
+  .coin-fly{
+    position:fixed; font-size:20px; z-index:2500; pointer-events:none;
+    transition:transform 0.55s cubic-bezier(.3,.85,.4,1), opacity 0.55s ease;
+  }
+
+  /* grid */
+  #card-container{
+    padding:calc(env(safe-area-inset-top) + 96px) 14px calc(env(safe-area-inset-bottom) + 128px);
+    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  }
+
+  /* shop card - iOS style */
+  .shop-card{
+    background:var(--card); border-radius:16px; padding:12px;
+    position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.06);
+    animation:card-in 0.35s cubic-bezier(.2,.9,.3,1.1) backwards;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .shop-card:active{ transform:scale(0.97); box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+  @keyframes card-in{
+    0%{ opacity:0; transform:translateY(10px) scale(0.96); }
+    100%{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .shop-card.opening{ animation:card-open 0.32s ease forwards; }
+  @keyframes card-open{
+    0%{ transform:scale(1); opacity:1; }
+    100%{ transform:scale(0.9); opacity:0; }
+  }
+
+  .icon-tile{
+    width:56px; height:56px; border-radius:16px; margin-bottom:10px;
+    display:flex; align-items:center; justify-content:center; font-size:28px;
+    box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.04);
+  }
+  .shop-title{ font-size:14.5px; font-weight:600; line-height:1.3; word-break:break-word; letter-spacing:-0.1px; }
+  .shop-sub{ font-size:11.5px; color:var(--label2); margin-top:2px; }
+
+  .btn-update{
+    position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:50%;
+    background:var(--fill); border:none; color:var(--label2); font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .btn-update:active{ opacity:0.6; }
+
+  /* empty state */
+  .empty-state{ grid-column:1 / -1; text-align:center; padding:80px 24px 20px; }
+  .empty-state .icon-tile{ width:72px; height:72px; border-radius:20px; font-size:36px; margin:0 auto 14px; }
+  .empty-state .msg1{ font-weight:700; font-size:17px; color:var(--label); }
+  .empty-state .msg2{ font-size:13.5px; color:var(--label2); margin-top:5px; line-height:1.5; }
+
+  /* bottom toolbar */
+  .toolbar{
+    position:fixed; left:0; bottom:0; width:100%; z-index:1000;
+    padding:10px 20px calc(env(safe-area-inset-bottom) + 10px);
+    background:rgba(242,242,247,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border-top:0.5px solid var(--sep);
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  .btn-add{
+    width:54px; height:54px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--accent); color:#fff; font-size:26px; font-weight:400;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(255,59,110,0.4);
+  }
+  .btn-add:active{ transform:scale(0.92); opacity:0.9; }
+  .toolbar-label{ font-size:11px; font-weight:600; color:var(--label2); }
+
+  /* bottom sheet modal */
+  .sheet-backdrop{
+    display:none; position:fixed; inset:0; z-index:2000;
+    background:rgba(0,0,0,0.38);
+  }
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:2001;
+    background:var(--card); border-radius:20px 20px 0 0;
+    padding:10px 20px calc(env(safe-area-inset-bottom) + 22px);
+    transform:translateY(100%); transition:transform 0.32s cubic-bezier(.25,.9,.35,1.1);
+  }
+  .sheet-backdrop.show{ display:block; }
+  .sheet-backdrop.show .sheet{ transform:translateY(0); }
+  .sheet-handle{ width:36px; height:5px; border-radius:3px; background:var(--sep); margin:6px auto 14px; }
+  .sheet-header{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .sheet-icon{ font-size:26px; }
+  .sheet-title{ font-size:17px; font-weight:700; }
+  .sheet-url{ font-size:12px; color:var(--label2); margin:-8px 0 14px; word-break:break-all; }
+  .sheet input[type="text"]{
+    width:100%; padding:13px 14px; border-radius:12px; border:none;
+    background:var(--fill); margin-bottom:14px; font-size:16px; color:var(--label);
+    font-family:inherit; font-weight:500; outline:none;
+  }
+  .sheet input[type="text"]::placeholder{ color:var(--label2); }
+  .btn-primary{
+    width:100%; padding:14px; border:none; border-radius:13px; cursor:pointer;
+    background:var(--accent); color:#fff; font-family:inherit; font-weight:700; font-size:16px;
+  }
+  .btn-primary:active{ opacity:0.85; transform:scale(0.98); }
+  .btn-text{
+    width:100%; padding:12px; border:none; background:none; cursor:pointer;
+    color:var(--accent); font-family:inherit; font-weight:600; font-size:15px; margin-top:2px;
+  }
+  .btn-text:active{ opacity:0.5; }
+
+  /* toast */
+  .toast{
+    position:fixed; left:50%; transform:translateX(-50%);
+    top:calc(env(safe-area-inset-top) + 78px);
+    background:rgba(28,28,30,0.92); color:#fff; padding:9px 16px; border-radius:14px;
+    font-size:13px; font-weight:600; z-index:3000; backdrop-filter:blur(10px);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, top .25s ease;
+  }
+  .toast.show{ opacity:1; top:calc(env(safe-area-inset-top) + 88px); }
+
+  /* confetti */
+  .confetti-piece{
+    position:fixed; top:-24px; z-index:2600; pointer-events:none; will-change:transform, opacity;
+    animation-name:confetti-fall; animation-timing-function:cubic-bezier(.25,.46,.45,.94); animation-fill-mode:forwards;
+  }
+  @keyframes confetti-fall{
+    0%{ transform:translateY(0) translateX(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(105vh) translateX(var(--drift)) rotate(var(--rot)); opacity:0.85; }
+  }
+</style>
 </head>
 <body>
-    <div class="header">Magic Portal ✨</div>
-    
-    <div id="card-container"></div>
-
-    <!-- 追加ボタン（画面右下に固定） -->
-    <button class="fab" onclick="document.getElementById('qr-input').click()">+</button>
-
-    <!-- 裏で動くファイル選択とキャンバス -->
-    <input type="file" id="qr-input" style="display:none" accept="image/*">
-    <input type="file" id="update-qr-input" style="display:none" accept="image/*">
-    <canvas id="canvas" style="display:none;"></canvas>
-
-    <!-- 登録用ポップアップ -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h3 style="color:#FFD700; margin-top:0;">新しいパスを追加</h3>
-            <p style="font-size:11px; color:#ccc; word-break:break-all;" id="scanned-url"></p>
-            <input type="text" id="spot-name" placeholder="タイトル (例: お城のマップ)">
-            <button class="btn-jump" style="width:100%; font-size:16px;" onclick="saveSpot()">魔法をかける</button>
-        </div>
+  <div class="navbar">
+    <div class="navbar-row">
+      <div>
+        <div class="nav-title">おみせ</div>
+        <div class="nav-sub">タップして開く・長押しで手放す</div>
+      </div>
+      <div class="coin-badge" id="coin-badge">🪙 <span id="coin-count">0</span></div>
     </div>
+  </div>
 
-    <script>
-        let updatingIndex = -1;
-        window.onload = loadSpots;
+  <div id="card-container"></div>
 
-        // 新規追加時のQR読み取り
-        document.getElementById('qr-input').addEventListener('change', (e) => handleQR(e.target.files[0], (url) => {
-            document.getElementById('scanned-url').textContent = url;
-            document.getElementById('modal').style.display = 'flex';
-            document.getElementById('qr-input').value = ''; // リセット
-        }));
+  <div class="toolbar">
+    <button class="btn-add" onclick="document.getElementById('qr-input').click()">＋</button>
+    <div class="toolbar-label">おみせを追加</div>
+  </div>
 
-        // 更新時のQR読み取り
-        document.getElementById('update-qr-input').addEventListener('change', (e) => handleQR(e.target.files[0], (url) => {
-            const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-            spots[updatingIndex].url = url;
-            localStorage.setItem('magic_spots', JSON.stringify(spots));
-            document.getElementById('update-qr-input').value = ''; // リセット
-            loadSpots();
-            alert('URLを更新しました✨');
-        }));
+  <input type="file" id="qr-input" style="display:none" accept="image/*">
+  <input type="file" id="update-qr-input" style="display:none" accept="image/*">
+  <canvas id="canvas" style="display:none;"></canvas>
 
-        // QRコード解析の共通処理
-        function handleQR(file, callback) {
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.getElementById('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = img.width; canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    const code = jsQR(ctx.getImageData(0,0,img.width,img.height).data, img.width, img.height);
-                    if (code && code.data.startsWith('http')) {
-                        callback(code.data);
-                    } else {
-                        alert('有効なURLを含むQRコードが見つかりませんでした。');
-                    }
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+  <div id="sheet-backdrop" class="sheet-backdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-icon">🎉</span>
+        <span class="sheet-title">あたらしいおみせ</span>
+      </div>
+      <div class="sheet-url" id="scanned-url"></div>
+      <input type="text" id="spot-name" placeholder="おみせのなまえ" maxlength="20">
+      <button class="btn-primary" onclick="saveSpot()">ついか</button>
+      <button class="btn-text" onclick="closeSheet()">キャンセル</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let updatingIndex = -1;
+    let pendingUrl = '';
+    window.onload = () => { loadSpots(); updateCoinDisplay(); };
+
+    const CREATURES = ['🐣','🐥','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐙','🦄','🐲','🐹','🐱','🐶','🐢','🦋','🦔','🐝','🐬'];
+    const PALETTES = [
+      ['#FFC1D6','#FFEFB0'], ['#B7F0EE','#C6F7D0'], ['#FFD3B6','#FFE8E0'],
+      ['#D2D6FF','#C3F0DD'], ['#FFE1B3','#E9F5C0'], ['#D6C6FF','#FFD1EC'],
+      ['#C1E8FF','#D9FFDB'], ['#FFCDE0','#FFF3B0']
+    ];
+
+    function getCoins(){ return parseInt(localStorage.getItem('magic_coins') || '0', 10); }
+    function setCoins(n){ localStorage.setItem('magic_coins', String(n)); }
+    function updateCoinDisplay(){ document.getElementById('coin-count').textContent = getCoins(); }
+
+    function hashStr(str){
+      let h = 0;
+      for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
+      return h;
+    }
+    function pickFor(list, key){
+      return list[hashStr(key) % list.length];
+    }
+
+    function hostOf(url){
+      try { return new URL(url).host; } catch(e) { return url; }
+    }
+
+    function showToast(msg){
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(()=> t.classList.remove('show'), 1600);
+    }
+
+    function openSheet(){
+      document.getElementById('sheet-backdrop').classList.add('show');
+    }
+    function closeSheet(){
+      document.getElementById('sheet-backdrop').classList.remove('show');
+      document.getElementById('spot-name').value = '';
+    }
+    document.getElementById('sheet-backdrop').addEventListener('click', (e) => {
+      if (e.target.id === 'sheet-backdrop') closeSheet();
+    });
+
+    document.getElementById('qr-input').addEventListener('change', (e) => handleQR(e.target.files[0], (url) => {
+      pendingUrl = url;
+      document.getElementById('scanned-url').textContent = url;
+      openSheet();
+      document.getElementById('qr-input').value = '';
+    }));
+
+    document.getElementById('update-qr-input').addEventListener('change', (e) => handleQR(e.target.files[0], (url) => {
+      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
+      spots[updatingIndex].url = url;
+      localStorage.setItem('magic_spots', JSON.stringify(spots));
+      document.getElementById('update-qr-input').value = '';
+      loadSpots();
+      showToast('新しいパスにこうかん✨');
+    }));
+
+    // 画像全体をキャンバスに描画してjsQRで探す(縮小サイズを何パターンか試す)
+    function scanWhole(source, w0, h0, maxDim) {
+      const scale = Math.min(1, maxDim / Math.max(w0, h0));
+      const w = Math.max(1, Math.round(w0 * scale));
+      const h = Math.max(1, Math.round(h0 * scale));
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      canvas.width = w; canvas.height = h;
+      ctx.drawImage(source, 0, 0, w, h);
+      return jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'attemptBoth' });
+    }
+
+    // 写真の中でQRコードが小さく写っている場合(看板全体を撮った写真など)向けに、
+    // 画像をいくつかの重なり合ったタイルに分けて、それぞれ拡大しながら探す
+    function scanTiles(source, w0, h0) {
+      const grid = 3;
+      const overlap = 0.15;
+      const tileW = w0 / (grid - (grid - 1) * overlap);
+      const tileH = h0 / (grid - (grid - 1) * overlap);
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const OUT = 900;
+
+      for (let gy = 0; gy < grid; gy++) {
+        for (let gx = 0; gx < grid; gx++) {
+          const sx = Math.max(0, Math.round(gx * tileW * (1 - overlap)));
+          const sy = Math.max(0, Math.round(gy * tileH * (1 - overlap)));
+          const sw = Math.min(w0 - sx, Math.round(tileW));
+          const sh = Math.min(h0 - sy, Math.round(tileH));
+          if (sw <= 0 || sh <= 0) continue;
+
+          const outScale = OUT / Math.max(sw, sh);
+          const dw = Math.round(sw * outScale);
+          const dh = Math.round(sh * outScale);
+          canvas.width = dw; canvas.height = dh;
+          ctx.drawImage(source, sx, sy, sw, sh, 0, 0, dw, dh);
+          const code = jsQR(ctx.getImageData(0, 0, dw, dh).data, dw, dh, { inversionAttempts: 'attemptBoth' });
+          if (code) return code;
         }
+      }
+      return null;
+    }
 
-        // 保存処理
-        function saveSpot() {
-            const name = document.getElementById('spot-name').value;
-            const url = document.getElementById('scanned-url').textContent;
-            if (!name) { alert('タイトルを入力してください。'); return; }
+    async function loadDrawableSource(file) {
+      if (window.createImageBitmap) {
+        try {
+          const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+          return { source: bitmap, width: bitmap.width, height: bitmap.height };
+        } catch (err) { /* フォールバックへ */ }
+      }
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => resolve({ source: img, width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+          img.onerror = () => reject(new Error('decode-failed'));
+          img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('read-failed'));
+        reader.readAsDataURL(file);
+      });
+    }
 
-            const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-            spots.push({ name, url });
-            localStorage.setItem('magic_spots', JSON.stringify(spots));
-            
-            document.getElementById('spot-name').value = '';
-            document.getElementById('modal').style.display = 'none';
-            loadSpots();
+    async function handleQR(file, callback) {
+      if (!file) return;
+      showToast('QRコードを さがしています…');
+      let loaded;
+      try {
+        loaded = await loadDrawableSource(file);
+      } catch (err) {
+        showToast('この写真は読み込めなかったよ💦 べつの写真で試してみてね');
+        return;
+      }
+
+      const { source, width, height } = loaded;
+      let code = null;
+      for (const maxDim of [1600, 1100, 900, 2200, 700]) {
+        code = scanWhole(source, width, height, maxDim);
+        if (code) break;
+      }
+      if (!code) code = scanTiles(source, width, height);
+      if (source.close) source.close();
+
+      if (code && code.data && code.data.startsWith('http')) {
+        callback(code.data);
+      } else {
+        showToast('QRコードが見つからなかったよ💦');
+      }
+    }
+
+    function spawnConfetti() {
+      const colors = ['#FF3B6E', '#FF9500', '#6C5CE7', '#A0E7E5', '#FFB5C0', '#B4F8C8'];
+      const emojis = ['🎉', '✨', '🎊', '⭐', '🌸'];
+      const count = 30;
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left = (Math.random() * 100) + 'vw';
+        el.style.setProperty('--drift', (Math.random() * 160 - 80) + 'px');
+        el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+        const duration = 1.4 + Math.random() * 1.2;
+        const delay = Math.random() * 0.2;
+        el.style.animationDuration = duration + 's';
+        el.style.animationDelay = delay + 's';
+        if (Math.random() < 0.4) {
+          el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+          el.style.fontSize = (13 + Math.random() * 12) + 'px';
+        } else {
+          const size = 6 + Math.random() * 6;
+          el.style.width = size + 'px';
+          el.style.height = (size * 0.5 + size) + 'px';
+          el.style.background = colors[Math.floor(Math.random() * colors.length)];
+          el.style.borderRadius = Math.random() < 0.5 ? '50%' : '3px';
         }
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), (duration + delay) * 1000 + 150);
+      }
+    }
 
-        // カード生成処理
-        function loadSpots() {
-            const container = document.getElementById('card-container');
-            container.innerHTML = '';
-            const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-            
-            spots.forEach((spot, index) => {
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.innerHTML = `
-                    <div class="card-info">
-                        <div class="card-title">${spot.name}</div>
-                        <div class="card-url">${spot.url}</div>
-                    </div>
-                    <button class="btn-jump" onclick="window.location.href='${spot.url}'">開く</button>
-                    <button class="btn-update" onclick="startUpdate(${index})">🔄</button>
-                `;
-                container.appendChild(div);
-            });
-        }
+    function saveSpot() {
+      const name = document.getElementById('spot-name').value.trim();
+      const url = pendingUrl;
+      if (!name) { showToast('なまえを いれてね'); return; }
 
-        // 更新開始
-        function startUpdate(index) {
-            updatingIndex = index;
-            document.getElementById('update-qr-input').click();
-        }
-    </script>
+      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
+      spots.push({ name, url });
+      localStorage.setItem('magic_spots', JSON.stringify(spots));
+
+      spawnConfetti();
+      setTimeout(() => {
+        closeSheet();
+        loadSpots();
+      }, 500);
+    }
+
+    function loadSpots() {
+      const container = document.getElementById('card-container');
+      container.innerHTML = '';
+      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
+
+      if (spots.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon-tile" style="background:linear-gradient(to bottom, #FFC1D6, #FFEFB0);">🥚</div>
+            <div class="msg1">まだ おみせがない</div>
+            <div class="msg2">下の「＋」から QRコードを読み込んで<br>お気に入りのおみせを追加しよう</div>
+          </div>`;
+        return;
+      }
+
+      spots.forEach((spot, index) => {
+        const key = spot.name + spot.url;
+        const face = pickFor(CREATURES, key);
+        const [c1, c2] = pickFor(PALETTES, key + 'p');
+        const div = document.createElement('div');
+        div.className = 'shop-card';
+        div.style.animationDelay = (index * 0.04) + 's';
+        div.innerHTML = `
+          <button class="btn-update" onclick="startUpdate(event, ${index})">↻</button>
+          <div class="icon-tile" style="background:linear-gradient(to bottom, ${c1}, ${c2});">${face}</div>
+          <div class="shop-title">${escapeHtml(spot.name)}</div>
+          <div class="shop-sub">${escapeHtml(hostOf(spot.url))}</div>
+        `;
+
+        let pressTimer = null;
+        div.addEventListener('pointerdown', (ev) => {
+          if (ev.target.closest('.btn-update')) return;
+          pressTimer = setTimeout(() => confirmDelete(index), 650);
+        });
+        const clearPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+        div.addEventListener('pointerup', clearPress);
+        div.addEventListener('pointerleave', clearPress);
+
+        div.addEventListener('click', (ev) => {
+          if (ev.target.closest('.btn-update')) return;
+          openSpot(div, spot.url);
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    function escapeHtml(str){
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function openSpot(cardEl, url) {
+      cardEl.classList.add('opening');
+      flyCoin(cardEl);
+      setCoins(getCoins() + 1);
+      setTimeout(() => { window.location.href = url; }, 280);
+    }
+
+    function flyCoin(fromEl) {
+      const rect = fromEl.getBoundingClientRect();
+      const badge = document.getElementById('coin-badge');
+      const targetRect = badge.getBoundingClientRect();
+      const coin = document.createElement('div');
+      coin.className = 'coin-fly';
+      coin.textContent = '🪙';
+      coin.style.left = (rect.left + rect.width / 2 - 10) + 'px';
+      coin.style.top = (rect.top + rect.height / 2 - 10) + 'px';
+      coin.style.opacity = '1';
+      document.body.appendChild(coin);
+      requestAnimationFrame(() => {
+        const dx = targetRect.left + targetRect.width / 2 - (rect.left + rect.width / 2);
+        const dy = targetRect.top + targetRect.height / 2 - (rect.top + rect.height / 2);
+        coin.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`;
+        coin.style.opacity = '0';
+      });
+      setTimeout(() => {
+        coin.remove();
+        updateCoinDisplay();
+        badge.classList.add('bump');
+        setTimeout(() => badge.classList.remove('bump'), 400);
+      }, 550);
+    }
+
+    function startUpdate(ev, index) {
+      ev.stopPropagation();
+      updatingIndex = index;
+      document.getElementById('update-qr-input').click();
+    }
+
+    function confirmDelete(index) {
+      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
+      const name = spots[index] ? spots[index].name : '';
+      if (confirm(`「${name}」を てばなす？`)) {
+        spots.splice(index, 1);
+        localStorage.setItem('magic_spots', JSON.stringify(spots));
+        loadSpots();
+        showToast('バイバイ👋');
+      }
+    }
+  </script>
 </body>
 </html>
