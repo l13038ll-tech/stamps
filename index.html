@@ -3,293 +3,297 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ff4f8b">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ふしぎポータル</title>
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>おみせポケット</title>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 <style>
-  :root{
-    --accent:#FF3B6E;
-    --accent-dim:rgba(255,59,110,0.12);
-    --gold:#FF9500;
-    --gold-dim:rgba(255,149,0,0.14);
-    --bg:#F2F2F7;
-    --card:#FFFFFF;
-    --label:#1C1C1E;
-    --label2:#8E8E93;
-    --sep:rgba(60,60,67,0.29);
-    --fill:rgba(120,120,128,0.12);
+  :root {
+    --pink: #ff4f8b;
+    --ink: #28252c;
+    --muted: #77727e;
+    --bg: #fff6fa;
+    --line: #f1dce6;
+    --gold: #b36f00;
+    --gold-dim: #fff0bd;
+    --fill: rgba(120,120,128,0.12);
   }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ height:100%; overscroll-behavior-y:none; }
-  body{
-    margin:0; color:var(--label); background:var(--bg); min-height:100vh;
-    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "M PLUS Rounded 1c", sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-
-  /* nav bar */
-  .navbar{
-    position:fixed; top:0; width:100%; z-index:100;
-    padding:calc(env(safe-area-inset-top) + 8px) 20px 12px;
-    background:rgba(242,242,247,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-    border-bottom:0.5px solid var(--sep);
-  }
-  .navbar-row{ display:flex; align-items:flex-start; justify-content:space-between; }
-  .nav-title{ font-size:30px; font-weight:800; letter-spacing:-0.4px; line-height:1.15; }
-  .nav-sub{ font-size:13px; color:var(--label2); margin-top:2px; font-weight:500; }
-  .coin-badge{
-    display:flex; align-items:center; gap:4px; background:var(--gold-dim);
-    color:var(--gold); font-weight:700; font-size:14px; border-radius:14px;
-    padding:6px 10px; margin-top:2px; white-space:nowrap;
-  }
-  .coin-badge.bump{ animation:coin-bump 0.35s ease; }
-  @keyframes coin-bump{ 0%{transform:scale(1);} 45%{transform:scale(1.18);} 100%{transform:scale(1);} }
-  .coin-fly{
-    position:fixed; font-size:20px; z-index:2500; pointer-events:none;
-    transition:transform 0.55s cubic-bezier(.3,.85,.4,1), opacity 0.55s ease;
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overscroll-behavior-y: none; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--ink);
+    background: radial-gradient(circle at 88% 5%, #d9f8f2 0 13%, transparent 14%), var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* grid */
-  #card-container{
-    padding:calc(env(safe-area-inset-top) + 96px) 14px calc(env(safe-area-inset-bottom) + 128px);
-    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  /* Header */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    padding: calc(env(safe-area-inset-top) + 14px) 20px 14px;
+    background: #fff6faef; border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+  .head { display: flex; align-items: center; justify-content: space-between; }
+  h1 { margin: 0; font-size: 25px; letter-spacing: -.04em; }
+  .sub { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+  .coins {
+    padding: 8px 11px; border-radius: 999px; background: var(--gold-dim);
+    color: var(--gold); font-size: 13px; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; gap: 4px; white-space: nowrap;
+  }
+  .coins.bump { animation: coin-bump 0.35s ease; }
+  @keyframes coin-bump { 0%{transform:scale(1);} 45%{transform:scale(1.18);} 100%{transform:scale(1);} }
+  .coin-fly {
+    position: fixed; font-size: 20px; z-index: 2500; pointer-events: none;
+    transition: transform 0.55s cubic-bezier(.3,.85,.4,1), opacity 0.55s ease;
   }
 
-  /* shop card - iOS style */
-  .shop-card{
-    background:var(--card); border-radius:16px; padding:12px;
-    position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.06);
-    animation:card-in 0.35s cubic-bezier(.2,.9,.3,1.1) backwards;
-    transition:transform .12s ease, box-shadow .12s ease;
+  /* Main Layout */
+  main { padding: 18px 14px 118px; max-width: 720px; margin: auto; }
+  .hint {
+    display: flex; gap: 10px; align-items: center; padding: 12px 14px;
+    background: #fff; border: 1px solid var(--line); border-radius: 18px;
+    font-size: 13px; line-height: 1.45; margin-bottom: 16px;
   }
-  .shop-card:active{ transform:scale(0.97); box-shadow:0 1px 2px rgba(0,0,0,0.04); }
-  @keyframes card-in{
-    0%{ opacity:0; transform:translateY(10px) scale(0.96); }
-    100%{ opacity:1; transform:translateY(0) scale(1); }
+  .hint img { width: 42px; height: 42px; object-fit: contain; }
+
+  /* Grid & Cards */
+  #card-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .spot {
+    min-height: 154px; padding: 12px; border: 0; border-radius: 20px;
+    color: var(--ink); text-align: left; background: #fff;
+    box-shadow: 0 4px 16px #c26e9420; cursor: pointer; position: relative;
+    animation: card-in 0.35s cubic-bezier(.2,.9,.3,1.1) backwards;
+    transition: transform .12s ease, box-shadow .12s ease;
   }
-  .shop-card.opening{ animation:card-open 0.32s ease forwards; }
-  @keyframes card-open{
-    0%{ transform:scale(1); opacity:1; }
-    100%{ transform:scale(0.9); opacity:0; }
+  .spot:active { transform: scale(0.97); box-shadow: 0 2px 8px #c26e9415; }
+  .spot.opening { animation: card-open 0.32s ease forwards; }
+  @keyframes card-in { 0%{ opacity:0; transform:translateY(10px) scale(0.96); } 100%{ opacity:1; transform:translateY(0) scale(1); } }
+  @keyframes card-open { 0%{ transform:scale(1); opacity:1; } 100%{ transform:scale(0.9); opacity:0; } }
+  
+  .spot img { width: 58px; height: 58px; object-fit: contain; border-radius: 16px; background: #ecfff8; }
+  .spot strong { display: block; margin-top: 8px; font-size: 15px; overflow-wrap: anywhere; }
+  .spot small { display: block; margin-top: 4px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  
+  .edit {
+    position: absolute; top: 9px; right: 9px; border: 0; background: #f7edf2;
+    border-radius: 50%; width: 29px; height: 29px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: var(--muted);
+  }
+  .edit:active { opacity: 0.6; }
+  .claim-badge {
+    position: absolute; top: 9px; left: 9px; font-size: 11px; font-weight: 800;
+    color: var(--gold); background: var(--gold-dim); border-radius: 10px; padding: 2px 6px;
   }
 
-  .icon-tile{
-    width:56px; height:56px; border-radius:16px; margin-bottom:10px;
-    display:flex; align-items:center; justify-content:center; font-size:28px;
-    box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.04);
+  /* Empty State */
+  .empty {
+    grid-column: 1 / -1; padding: 44px 16px; text-align: center;
+    background: #fff; border: 1px dashed #eeb6cd; border-radius: 24px;
   }
-  .shop-title{ font-size:14.5px; font-weight:600; line-height:1.3; word-break:break-word; letter-spacing:-0.1px; }
-  .shop-sub{ font-size:11.5px; color:var(--label2); margin-top:2px; }
+  .empty img { width: 92px; margin-bottom: 10px; }
+  .empty h2 { margin: 0 0 5px; font-size: 17px; }
+  .empty p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
 
-  .btn-update{
-    position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:50%;
-    background:var(--fill); border:none; color:var(--label2); font-size:12px;
-    display:flex; align-items:center; justify-content:center;
+  /* Bottom Actions */
+  .bottom {
+    position: fixed; inset: auto 0 0; z-index: 1000;
+    padding: 12px 20px calc(env(safe-area-inset-bottom) + 13px);
+    text-align: center; background: #fff6faef; border-top: 1px solid var(--line);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
   }
-  .btn-update:active{ opacity:0.6; }
+  .actions { display: flex; justify-content: center; gap: 10px; }
+  .action {
+    border: 0; border-radius: 16px; padding: 12px 14px; color: var(--ink);
+    background: #fff; font: 700 13px inherit; box-shadow: 0 3px 12px #c26e9420; cursor: pointer;
+  }
+  .action.camera { color: #fff; background: var(--pink); box-shadow: 0 5px 14px #ff4f8b66; flex: 1; }
+  .action:active { transform: scale(0.97); }
 
-  /* empty state */
-  .empty-state{ grid-column:1 / -1; text-align:center; padding:80px 24px 20px; }
-  .empty-state .icon-tile{ width:72px; height:72px; border-radius:20px; font-size:36px; margin:0 auto 14px; }
-  .empty-state .msg1{ font-weight:700; font-size:17px; color:var(--label); }
-  .empty-state .msg2{ font-size:13.5px; color:var(--label2); margin-top:5px; line-height:1.5; }
-
-  /* bottom toolbar */
-  .toolbar{
-    position:fixed; left:0; bottom:0; width:100%; z-index:1000;
-    padding:10px 20px calc(env(safe-area-inset-bottom) + 10px);
-    background:rgba(242,242,247,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-    border-top:0.5px solid var(--sep);
-    display:flex; flex-direction:column; align-items:center; gap:4px;
+  /* Bottom Sheet Modals */
+  .sheet-backdrop { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(37, 19, 28, 0.4); }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 2001;
+    background: #fff; border-radius: 24px 24px 0 0;
+    padding: 10px 20px calc(env(safe-area-inset-bottom) + 22px);
+    transform: translateY(100%); transition: transform 0.32s cubic-bezier(.25,.9,.35,1.1);
+    box-shadow: 0 -8px 30px #0003;
   }
-  .btn-add{
-    width:54px; height:54px; border-radius:50%; border:none; cursor:pointer;
-    background:var(--accent); color:#fff; font-size:26px; font-weight:400;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 4px 14px rgba(255,59,110,0.4);
+  .sheet-backdrop.show { display: block; }
+  .sheet-backdrop.show .sheet { transform: translateY(0); }
+  .sheet-handle { width: 36px; height: 5px; border-radius: 3px; background: #e6cfe0; margin: 6px auto 14px; }
+  .sheet-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .sheet-title { font-size: 19px; font-weight: 700; margin: 0; }
+  .sheet-url { font-size: 12px; color: var(--muted); margin: -8px 0 14px; word-break: break-all; }
+  
+  .sheet input[type="text"], .sheet input[type="number"] {
+    width: 100%; padding: 14px; border-radius: 13px; border: 0;
+    background: #f6eff3; margin-bottom: 8px; font-size: 16px; color: var(--ink);
+    font-family: inherit; outline: none;
   }
-  .btn-add:active{ transform:scale(0.92); opacity:0.9; }
-  .toolbar-label{ font-size:11px; font-weight:600; color:var(--label2); }
-
-  /* bottom sheet modal */
-  .sheet-backdrop{
-    display:none; position:fixed; inset:0; z-index:2000;
-    background:rgba(0,0,0,0.38);
+  .sheet input::placeholder { color: var(--muted); }
+  
+  .btn-primary {
+    width: 100%; padding: 14px; border: none; border-radius: 13px; cursor: pointer;
+    background: var(--pink); color: #fff; font-family: inherit; font-weight: 800; font-size: 16px; margin-top: 8px;
   }
-  .sheet{
-    position:fixed; left:0; right:0; bottom:0; z-index:2001;
-    background:var(--card); border-radius:20px 20px 0 0;
-    padding:10px 20px calc(env(safe-area-inset-bottom) + 22px);
-    transform:translateY(100%); transition:transform 0.32s cubic-bezier(.25,.9,.35,1.1);
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-secondary {
+    width: 100%; padding: 14px; border: none; border-radius: 13px; cursor: pointer;
+    background: #f6eff3; color: var(--ink); font-family: inherit; font-weight: 800; font-size: 16px; margin-top: 8px;
   }
-  .sheet-backdrop.show{ display:block; }
-  .sheet-backdrop.show .sheet{ transform:translateY(0); }
-  .sheet-handle{ width:36px; height:5px; border-radius:3px; background:var(--sep); margin:6px auto 14px; }
-  .sheet-header{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-  .sheet-icon{ font-size:26px; }
-  .sheet-title{ font-size:17px; font-weight:700; }
-  .sheet-url{ font-size:12px; color:var(--label2); margin:-8px 0 14px; word-break:break-all; }
-  .sheet input[type="text"]{
-    width:100%; padding:13px 14px; border-radius:12px; border:none;
-    background:var(--fill); margin-bottom:14px; font-size:16px; color:var(--label);
-    font-family:inherit; font-weight:500; outline:none;
-  }
-  .sheet input[type="text"]::placeholder{ color:var(--label2); }
-  .btn-primary{
-    width:100%; padding:14px; border:none; border-radius:13px; cursor:pointer;
-    background:var(--accent); color:#fff; font-family:inherit; font-weight:700; font-size:16px;
-  }
-  .btn-primary:active{ opacity:0.85; transform:scale(0.98); }
-  .btn-text{
-    width:100%; padding:12px; border:none; background:none; cursor:pointer;
-    color:var(--accent); font-family:inherit; font-weight:600; font-size:15px; margin-top:2px;
-  }
-  .btn-text:active{ opacity:0.5; }
-
-  /* toast */
-  .toast{
-    position:fixed; left:50%; transform:translateX(-50%);
-    top:calc(env(safe-area-inset-top) + 78px);
-    background:rgba(28,28,30,0.92); color:#fff; padding:9px 16px; border-radius:14px;
-    font-size:13px; font-weight:600; z-index:3000; backdrop-filter:blur(10px);
-    opacity:0; pointer-events:none; transition:opacity .25s ease, top .25s ease;
-  }
-  .toast.show{ opacity:1; top:calc(env(safe-area-inset-top) + 88px); }
-
-  /* confetti */
-  .confetti-piece{
-    position:fixed; top:-24px; z-index:2600; pointer-events:none; will-change:transform, opacity;
-    animation-name:confetti-fall; animation-timing-function:cubic-bezier(.25,.46,.45,.94); animation-fill-mode:forwards;
-  }
-  @keyframes confetti-fall{
-    0%{ transform:translateY(0) translateX(0) rotate(0deg); opacity:1; }
-    100%{ transform:translateY(105vh) translateX(var(--drift)) rotate(var(--rot)); opacity:0.85; }
+  .btn-secondary:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-text {
+    width: 100%; padding: 12px; border: none; background: none; cursor: pointer;
+    color: var(--muted); font-family: inherit; font-weight: 600; font-size: 14px; margin-top: 2px;
   }
 
-  /* rewards sheet */
-  .rewards-coin-line{
-    font-size:14px; font-weight:600; color:var(--label2); margin-bottom:12px;
+  /* Tickets styling */
+  .ticket-card {
+    position: relative; overflow: hidden; margin: 10px 0; padding: 15px 16px;
+    background: linear-gradient(105deg, #fff3c6, #fffdf4);
+    border: 2px dashed #f3c965; border-radius: 18px; box-shadow: 0 3px 12px #c26e9420;
   }
-  .rewards-coin-line span{ color:var(--gold); font-weight:800; }
-  #rewards-list{ max-height:38vh; overflow-y:auto; margin-bottom:10px; }
-  .rewards-empty{ text-align:center; color:var(--label2); font-size:13.5px; padding:18px 0; }
-  .reward-row{
-    display:flex; align-items:center; gap:8px; padding:10px 0;
-    border-bottom:0.5px solid var(--sep);
+  .ticket-card:before, .ticket-card:after {
+    content: ""; position: absolute; top: 50%; width: 20px; height: 20px;
+    border-radius: 50%; background: #fff; transform: translateY(-50%);
   }
-  .reward-info{ flex:1; min-width:0; }
-  .reward-name{ font-size:14.5px; font-weight:600; word-break:break-word; }
-  .reward-cost{ font-size:12.5px; color:var(--gold); font-weight:700; margin-top:1px; }
-  .btn-redeem{
-    border:none; border-radius:12px; padding:8px 12px; font-family:inherit;
-    font-weight:700; font-size:13px; background:var(--accent); color:#fff; cursor:pointer;
-    white-space:nowrap;
+  .ticket-card:before { left: -12px; }
+  .ticket-card:after { right: -12px; }
+  .ticket-top { display: flex; justify-content: space-between; align-items: center; font-weight: 900; color: var(--ink); font-size: 16px;}
+  .ticket-sub { margin: 4px 0 11px; color: #806720; font-size: 12px; font-weight: bold; }
+  
+  .ticket-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .ticket-row.used { opacity: 0.6; filter: grayscale(1); }
+  .ticket-row-info { flex: 1; min-width: 0; }
+  .ticket-row-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .ticket-row-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .btn-use-ticket {
+    border: none; border-radius: 999px; padding: 7px 12px; font-family: inherit;
+    font-weight: 800; font-size: 12px; background: var(--pink); color: #fff; cursor: pointer;
   }
-  .btn-redeem:disabled{ background:var(--fill); color:var(--label2); }
-  .btn-redeem:active:not(:disabled){ opacity:0.85; transform:scale(0.97); }
-  .btn-reward-del{
-    border:none; background:var(--fill); color:var(--label2); width:26px; height:26px;
-    border-radius:50%; font-size:12px; cursor:pointer; flex-shrink:0;
+  .btn-use-ticket:active { transform: scale(0.95); }
+  .ticket-used-badge {
+    font-size: 11px; font-weight: 800; color: #fff; background: #666;
+    padding: 5px 9px; border-radius: 999px;
   }
-  .btn-reward-del:active{ opacity:0.6; }
-  .btn-reward-edit{
-    border:none; background:var(--fill); color:var(--label2); width:26px; height:26px;
-    border-radius:50%; font-size:12px; cursor:pointer; flex-shrink:0;
-  }
-  .btn-reward-edit:active{ opacity:0.6; }
-  .rewards-add-row{ display:flex; gap:8px; margin:4px 0 12px; }
-  .rewards-add-row input{
-    border:none; background:var(--fill); border-radius:12px; padding:11px 12px;
-    font-family:inherit; font-size:14px; color:var(--label); outline:none;
-  }
-  #reward-name-input{ flex:1; min-width:0; }
-  #reward-cost-input{ width:76px; }
-  .btn-reward-add{
-    width:40px; border:none; border-radius:12px; background:var(--accent);
-    color:#fff; font-size:18px; cursor:pointer; flex-shrink:0;
-  }
-  .btn-reward-add:active{ opacity:0.85; }
+  #tickets-list { max-height: 50vh; overflow-y: auto; margin-bottom: 10px; }
 
-  /* daily-claim badge on shop card */
-  .claim-badge{
-    position:absolute; top:10px; left:10px; font-size:11px; font-weight:800;
-    color:var(--gold); background:var(--gold-dim); border-radius:10px; padding:2px 6px;
+  /* Rewards list */
+  .rewards-coin-line { font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+  .rewards-coin-line span { color: var(--gold); font-weight: 800; }
+  #rewards-list { max-height: 38vh; overflow-y: auto; margin-bottom: 10px; }
+  .rewards-empty { text-align: center; color: var(--muted); font-size: 13.5px; padding: 18px 0; }
+  .reward-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .reward-info { flex: 1; min-width: 0; }
+  .reward-name { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .reward-cost { font-size: 12.5px; color: var(--gold); font-weight: 800; margin-top: 1px; }
+  .btn-redeem {
+    border: none; border-radius: 999px; padding: 8px 12px; font-family: inherit;
+    font-weight: 800; font-size: 12px; background: var(--gold-dim); color: #9a6100; cursor: pointer;
+  }
+  .btn-redeem:disabled { background: #eee; color: #999; }
+  .btn-redeem:active:not(:disabled) { transform: scale(0.95); }
+  
+  .btn-reward-del, .btn-reward-edit {
+    border: none; background: #f6eff3; color: var(--muted); width: 28px; height: 28px;
+    border-radius: 50%; font-size: 12px; cursor: pointer; flex-shrink: 0; display:flex; align-items:center; justify-content:center;
+  }
+  .rewards-add-row { display: flex; gap: 8px; margin: 4px 0 12px; }
+  #reward-name-input { flex: 1; min-width: 0; }
+  #reward-cost-input { width: 80px; }
+  .btn-reward-add {
+    width: 44px; border: none; border-radius: 13px; background: var(--pink);
+    color: #fff; font-size: 20px; cursor: pointer; flex-shrink: 0; font-weight:bold;
   }
 
-  /* source picker action sheet */
-  .source-option{
-    width:100%; display:flex; align-items:center; gap:12px; padding:14px 4px;
-    background:none; border:none; border-bottom:0.5px solid var(--sep);
-    font-family:inherit; font-size:16px; font-weight:600; color:var(--label); cursor:pointer;
+  /* Live camera scan */
+  #live-scan-overlay {
+    display: none; position: fixed; inset: 0; z-index: 4000; background: #201d23;
+    align-items: center; justify-content: center; flex-direction: column; padding: 20px;
   }
-  .source-option:last-of-type{ border-bottom:none; }
-  .source-option:active{ opacity:0.6; }
-  .source-option .icon{ font-size:20px; width:24px; text-align:center; }
+  #live-scan-overlay.show { display: flex; }
+  .scanner-header { text-align: center; color: #fff; margin-bottom: 20px; width:100%; max-width: 520px;}
+  .scanner-header h2 { margin: 0 0 8px; font-size: 18px; }
+  .scanner-header p { margin: 0; color: #ddd; font-size: 13px; }
+  .live-scan-frame {
+    position: relative; width: 100%; max-width: 520px; aspect-ratio: 3/4;
+    border-radius: 16px; overflow: hidden; background: #000;
+  }
+  #live-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .live-scan-line {
+    position: absolute; left: 0; right: 0; height: 3px; background: var(--pink);
+    box-shadow: 0 0 12px var(--pink); animation: scan-line 2s ease-in-out infinite; z-index: 2;
+  }
+  @keyframes scan-line { 0%{ top:0; } 50%{ top:100%; } 100%{ top:0; } }
+  .btn-close-scanner {
+    width: 100%; max-width: 520px; margin-top: 20px; border: 0; border-radius: 13px;
+    padding: 14px; background: #fff; color: var(--ink); font: 800 15px inherit; cursor: pointer;
+  }
 
-  /* live camera scan */
-  #live-scan-overlay{
-    display:none; position:fixed; inset:0; z-index:4000; background:#000;
-    align-items:center; justify-content:center; flex-direction:column;
+  /* Toast & Confetti */
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    top: calc(env(safe-area-inset-top) + 78px);
+    background: rgba(40, 37, 44, 0.92); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; font-weight: 700; z-index: 3000; backdrop-filter: blur(10px);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease, top .25s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   }
-  #live-scan-overlay.show{ display:flex; }
-  #live-video{
-    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  .toast.show { opacity: 1; top: calc(env(safe-area-inset-top) + 88px); }
+  .confetti-piece {
+    position: fixed; top: -24px; z-index: 2600; pointer-events: none; will-change: transform, opacity;
+    animation-name: confetti-fall; animation-timing-function: cubic-bezier(.25,.46,.45,.94); animation-fill-mode: forwards;
   }
-  .live-scan-topbar{
-    position:absolute; top:0; left:0; right:0; z-index:2;
-    padding:calc(env(safe-area-inset-top) + 14px) 16px 14px;
-    display:flex; align-items:center; justify-content:space-between;
-    background:linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
+  @keyframes confetti-fall {
+    0%{ transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
+    100%{ transform: translateY(105vh) translateX(var(--drift)) rotate(var(--rot)); opacity: 0.85; }
   }
-  .live-scan-close{
-    width:34px; height:34px; border-radius:50%; border:none;
-    background:rgba(255,255,255,0.2); color:#fff; font-size:16px;
-    display:flex; align-items:center; justify-content:center;
+
+  /* Hidden Game */
+  #game-overlay {
+    display: none; position: fixed; inset: 0; z-index: 5000;
+    background: #000; color: #0f0; font-family: monospace;
+    flex-direction: column; align-items: center; justify-content: center;
   }
-  .live-scan-close:active{ opacity:0.6; }
-  .live-scan-title{ color:#fff; font-weight:700; font-size:15px; }
-  .live-scan-frame{
-    position:relative; z-index:2; width:min(72vw, 300px); aspect-ratio:1/1;
-    border:3px solid rgba(255,255,255,0.85); border-radius:24px;
-    box-shadow:0 0 0 2000px rgba(0,0,0,0.42);
-    overflow:hidden;
-  }
-  .live-scan-line{
-    position:absolute; left:6%; right:6%; height:3px; border-radius:2px;
-    background:linear-gradient(to right, transparent, var(--accent), transparent);
-    box-shadow:0 0 8px var(--accent);
-    animation:scan-line 1.8s ease-in-out infinite;
-  }
-  @keyframes scan-line{
-    0%{ top:6%; opacity:0.9; }
-    50%{ top:94%; opacity:0.9; }
-    100%{ top:6%; opacity:0.9; }
-  }
-  .live-scan-hint{
-    position:absolute; bottom:calc(env(safe-area-inset-bottom) + 40px); z-index:2;
-    color:#fff; font-size:13.5px; font-weight:600; text-shadow:0 1px 4px rgba(0,0,0,0.5);
+  #game-overlay.show { display: flex; }
+  #game-canvas { background: #111; border: 2px solid #0f0; max-width: 100%; touch-action: none; }
+  .game-close {
+    position: absolute; top: calc(env(safe-area-inset-top) + 15px); right: 15px;
+    background: #333; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;
   }
 </style>
 </head>
 <body>
-  <div class="navbar">
-    <div class="navbar-row">
+  <header>
+    <div class="head">
       <div>
-        <div class="nav-title">おみせ</div>
-        <div class="nav-sub">タップして開く・長押しで手放す</div>
+        <h1>おみせポケット</h1>
+        <p class="sub">QRコードから、お気に入りのおみせを集めよう</p>
       </div>
-      <button class="coin-badge" id="coin-badge" onclick="openRewardsSheet()">🪙 <span id="coin-count">0</span></button>
+      <div class="coins" id="coin-badge" onclick="openRewardsSheet()">⭐ <span id="coin-count">0</span></div>
     </div>
-  </div>
+  </header>
 
-  <div id="card-container"></div>
+  <main>
+    <div class="hint">
+      <img src="icons/icon-192.png" alt="オリジナルのマスコット" onerror="this.style.display='none'">
+      <span>カードをタップするとおみせを開けるよ。長押しで削除、鉛筆ボタンでQRを更新できます。</span>
+    </div>
+    <div id="card-container"></div>
+  </main>
 
-  <div class="toolbar">
-    <button class="btn-add" onclick="openSourceSheet('add')">＋</button>
-    <div class="toolbar-label">おみせを追加</div>
+  <div class="bottom">
+    <div class="actions">
+      <button class="action" onclick="pickSource('url')" aria-label="URL入力">🔗 URL</button>
+      <button class="action" onclick="pickSource('library')">写真から選ぶ</button>
+      <button class="action camera" onclick="startLiveScan()">📷 カメラで撮影</button>
+    </div>
   </div>
 
   <input type="file" id="qr-input-camera" style="display:none" accept="image/*" capture="environment">
@@ -297,58 +301,37 @@
   <canvas id="canvas" style="display:none;"></canvas>
   <canvas id="live-canvas" style="display:none;"></canvas>
 
-  <div id="source-sheet-backdrop" class="sheet-backdrop">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <span class="sheet-icon">📷</span>
-        <span class="sheet-title">QRコードを読み込む</span>
-      </div>
-      <button class="source-option" onclick="pickSource('live')"><span class="icon">🎯</span>その場でスキャン</button>
-      <button class="source-option" onclick="pickSource('camera')"><span class="icon">📷</span>カメラで撮る</button>
-      <button class="source-option" onclick="pickSource('library')"><span class="icon">🖼️</span>写真から選ぶ</button>
-      <button class="source-option" onclick="pickSource('url')"><span class="icon">🔗</span>URLを入力</button>
-      <button class="btn-text" onclick="closeSourceSheet()">キャンセル</button>
-    </div>
-  </div>
-
+  <!-- Modals -->
   <div id="url-sheet-backdrop" class="sheet-backdrop">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <span class="sheet-icon">🔗</span>
-        <span class="sheet-title">URLを入力</span>
-      </div>
+      <div class="sheet-header"><h2 class="sheet-title">URLを入力</h2></div>
       <input type="text" id="url-manual-input" placeholder="https://..." inputmode="url" autocapitalize="off" autocorrect="off">
       <button class="btn-primary" onclick="submitManualUrl()">つぎへ</button>
-      <button class="btn-text" onclick="closeUrlSheet()">キャンセル</button>
+      <button class="btn-secondary" onclick="closeUrlSheet()">キャンセル</button>
     </div>
   </div>
 
   <div id="live-scan-overlay">
-    <video id="live-video" playsinline muted autoplay></video>
-    <div class="live-scan-topbar">
-      <button class="live-scan-close" onclick="stopLiveScan()">✕</button>
-      <span class="live-scan-title">QRをスキャン中…</span>
-      <span style="width:34px;"></span>
+    <div class="scanner-header">
+      <h2>QRコードをかざしてね</h2>
+      <p>カメラへのアクセスを許可してください。</p>
     </div>
     <div class="live-scan-frame">
+      <video id="live-video" playsinline muted autoplay></video>
       <div class="live-scan-line"></div>
     </div>
-    <div class="live-scan-hint">QRコードを枠の中に合わせてね</div>
+    <button class="btn-close-scanner" onclick="stopLiveScan()">やめる</button>
   </div>
 
   <div id="add-sheet-backdrop" class="sheet-backdrop">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <span class="sheet-icon">🎉</span>
-        <span class="sheet-title">あたらしいおみせ</span>
-      </div>
+      <div class="sheet-header"><h2 class="sheet-title">おみせの名前をつけよう</h2></div>
       <div class="sheet-url" id="scanned-url"></div>
-      <input type="text" id="spot-name" placeholder="おみせのなまえ" maxlength="20">
-      <button class="btn-primary" onclick="saveSpot()">ついか</button>
-      <button class="btn-text" onclick="closeAddSheet()">キャンセル</button>
+      <input type="text" id="spot-name" placeholder="例：ケーキやさん" maxlength="24">
+      <button class="btn-primary" onclick="saveSpot()">保存する</button>
+      <button class="btn-secondary" onclick="closeAddSheet()">キャンセル</button>
     </div>
   </div>
 
@@ -356,18 +339,53 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header" id="rewards-header">
-        <span class="sheet-icon">🎁</span>
-        <span class="sheet-title">とくてん</span>
+        <h2 class="sheet-title">🎁 ごほうびチケット</h2>
       </div>
-      <div class="rewards-coin-line">たまったコイン <span id="rewards-coin-count">🪙 0</span></div>
+      <div class="rewards-coin-line">たまったコイン <span id="rewards-coin-count">⭐ 0</span></div>
       <div id="rewards-list"></div>
       <div id="rewards-admin-row" class="rewards-add-row" style="display:none;">
         <input type="text" id="reward-name-input" placeholder="とくてんの名前">
         <input type="number" id="reward-cost-input" placeholder="コスト" min="1">
         <button class="btn-reward-add" onclick="addReward()">＋</button>
       </div>
+      <button class="btn-secondary" onclick="openTicketsListSheet()">🎟 獲得したチケットを見る</button>
       <button class="btn-text" onclick="closeRewardsSheet()">とじる</button>
     </div>
+  </div>
+
+  <div id="ticket-sheet-backdrop" class="sheet-backdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header"><h2 class="sheet-title">こうかんしたよ！</h2></div>
+      <div class="ticket-card" id="ticket-card">
+        <div class="ticket-top">
+          <span id="ticket-name-out">🎟 ガチャガチャ 1回無料券</span>
+          <span style="font-size:12px; color:var(--pink);">NEW</span>
+        </div>
+        <div class="ticket-sub">好きなガチャガチャを1回無料でまわせます</div>
+        <div style="font-size:11px; color:#806720; font-weight:bold;">
+          <span id="ticket-date-out"></span> ・ <span id="ticket-serial-out"></span>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="closeTicketSheet()" style="margin-top:14px;">とじる</button>
+    </div>
+  </div>
+
+  <div id="tickets-list-sheet-backdrop" class="sheet-backdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header"><h2 class="sheet-title">獲得したチケット</h2></div>
+      <div id="tickets-list"></div>
+      <button class="btn-secondary" onclick="closeTicketsListSheet()">とじる</button>
+    </div>
+  </div>
+
+  <!-- Hidden Game -->
+  <div id="game-overlay">
+    <button class="game-close" onclick="closeGame()">✕ やめる</button>
+    <h2 style="margin-bottom:10px;">SPACE DEFENDER</h2>
+    <canvas id="game-canvas" width="300" height="400"></canvas>
+    <div style="margin-top:15px; font-size:12px;">スワイプ：移動 ／ タップ：発射</div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -375,26 +393,26 @@
   <script>
     let updatingIndex = -1;
     let pendingUrl = '';
+
+    // 【確認用】初回起動時、もしコインが未設定ならテスト用に30枚を初期セットする
+    if (!localStorage.getItem('magic_coins')) {
+      localStorage.setItem('magic_coins', '30');
+    }
+
     window.onload = () => { loadSpots(); updateCoinDisplay(); };
 
-    const CREATURES = ['🐣','🐥','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐙','🦄','🐲','🐹','🐱','🐶','🐢','🦋','🦔','🐝','🐬'];
-    const PALETTES = [
-      ['#FFC1D6','#FFEFB0'], ['#B7F0EE','#C6F7D0'], ['#FFD3B6','#FFE8E0'],
-      ['#D2D6FF','#C3F0DD'], ['#FFE1B3','#E9F5C0'], ['#D6C6FF','#FFD1EC'],
-      ['#C1E8FF','#D9FFDB'], ['#FFCDE0','#FFF3B0']
-    ];
     const DEFAULT_REWARDS = [
       { id:'r1', name:'ちいさなごほうび', cost:30 },
-      { id:'r2', name:'すきなおやつ', cost:80 },
       { id:'r3', name:'スペシャルなごほうび', cost:200 }
     ];
+    const FORCE_NAMES = { r1:'ちいさなごほうび', r3:'スペシャルなごほうび' };
 
     function getCoins(){ return parseInt(localStorage.getItem('magic_coins') || '0', 10); }
     function setCoins(n){ localStorage.setItem('magic_coins', String(n)); }
     function updateCoinDisplay(){
       document.getElementById('coin-count').textContent = getCoins();
       const rc = document.getElementById('rewards-coin-count');
-      if (rc) rc.textContent = '🪙 ' + getCoins();
+      if (rc) rc.textContent = '⭐ ' + getCoins();
     }
 
     function todayStr(){
@@ -408,545 +426,11 @@
         localStorage.setItem('magic_rewards', JSON.stringify(DEFAULT_REWARDS));
         return DEFAULT_REWARDS.slice();
       }
-      return JSON.parse(raw);
-    }
-    function setRewards(list){ localStorage.setItem('magic_rewards', JSON.stringify(list)); }
-
-    function hashStr(str){
-      let h = 0;
-      for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
-      return h;
-    }
-    function pickFor(list, key){
-      return list[hashStr(key) % list.length];
-    }
-
-    function hostOf(url){
-      try { return new URL(url).host; } catch(e) { return url; }
-    }
-
-    function showToast(msg){
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(()=> t.classList.remove('show'), 1600);
-    }
-
-    function openAddSheet(){
-      document.getElementById('add-sheet-backdrop').classList.add('show');
-    }
-    function closeAddSheet(){
-      document.getElementById('add-sheet-backdrop').classList.remove('show');
-      document.getElementById('spot-name').value = '';
-    }
-    document.getElementById('add-sheet-backdrop').addEventListener('click', (e) => {
-      if (e.target.id === 'add-sheet-backdrop') closeAddSheet();
-    });
-
-    let adminMode = false;
-
-    function openRewardsSheet(){
-      renderRewards();
-      document.getElementById('rewards-sheet-backdrop').classList.add('show');
-    }
-    function closeRewardsSheet(){
-      document.getElementById('rewards-sheet-backdrop').classList.remove('show');
-    }
-    document.getElementById('rewards-sheet-backdrop').addEventListener('click', (e) => {
-      if (e.target.id === 'rewards-sheet-backdrop') closeRewardsSheet();
-    });
-
-    // 🎁見出しを長押しすると管理者モードのON/OFFを切り替える(編集・追加・削除はここでのみ可能)
-    (function setupAdminToggle(){
-      const header = document.getElementById('rewards-header');
-      let timer = null;
-      header.addEventListener('pointerdown', () => {
-        timer = setTimeout(() => {
-          adminMode = !adminMode;
-          document.getElementById('rewards-admin-row').style.display = adminMode ? 'flex' : 'none';
-          renderRewards();
-          showToast(adminMode ? '管理者モード ON🔧' : '管理者モード OFF');
-        }, 700);
+      let rewards = JSON.parse(raw);
+      let changed = false;
+      const filtered = rewards.filter(r => {
+        if (r.id === 'r2' && r.name === 'すきなおやつ') { changed = true; return false; }
+        return true;
       });
-      const clearPress = () => { if (timer) { clearTimeout(timer); timer = null; } };
-      header.addEventListener('pointerup', clearPress);
-      header.addEventListener('pointerleave', clearPress);
-    })();
-
-    function renderRewards(){
-      const list = document.getElementById('rewards-list');
-      const rewards = getRewards();
-      const coins = getCoins();
-      list.innerHTML = '';
-      if (rewards.length === 0) {
-        list.innerHTML = '<div class="rewards-empty">まだ とくてんが ないよ</div>';
-        return;
-      }
-      rewards.forEach((r) => {
-        const row = document.createElement('div');
-        row.className = 'reward-row';
-        const enough = coins >= r.cost;
-        row.innerHTML = `
-          <div class="reward-info">
-            <div class="reward-name">${escapeHtml(r.name)}</div>
-            <div class="reward-cost">🪙 ${r.cost}</div>
-          </div>
-          <button class="btn-redeem" ${enough ? '' : 'disabled'} onclick="redeemReward('${r.id}')">こうかん</button>
-          ${adminMode ? `<button class="btn-reward-edit" onclick="editReward('${r.id}')">✎</button>` : ''}
-          ${adminMode ? `<button class="btn-reward-del" onclick="deleteReward('${r.id}')">✕</button>` : ''}
-        `;
-        list.appendChild(row);
-      });
-    }
-
-    function redeemReward(id){
-      const rewards = getRewards();
-      const reward = rewards.find(r => r.id === id);
-      if (!reward) return;
-      const coins = getCoins();
-      if (coins < reward.cost) { showToast('コインが たりないよ'); return; }
-      setCoins(coins - reward.cost);
-      updateCoinDisplay();
-      renderRewards();
-      spawnConfetti();
-      showToast(`「${reward.name}」と こうかんしたよ🎁`);
-    }
-
-    function deleteReward(id){
-      const rewards = getRewards();
-      const reward = rewards.find(r => r.id === id);
-      if (!reward) return;
-      if (!confirm(`「${reward.name}」を けす？`)) return;
-      setRewards(rewards.filter(r => r.id !== id));
-      renderRewards();
-    }
-
-    function addReward(){
-      const nameInput = document.getElementById('reward-name-input');
-      const costInput = document.getElementById('reward-cost-input');
-      const name = nameInput.value.trim();
-      const cost = parseInt(costInput.value, 10);
-      if (!name) { showToast('とくてんの なまえを いれてね'); return; }
-      if (!cost || cost <= 0) { showToast('コストを いれてね'); return; }
-      const rewards = getRewards();
-      rewards.push({ id: 'r' + Date.now(), name, cost });
-      setRewards(rewards);
-      nameInput.value = '';
-      costInput.value = '';
-      renderRewards();
-    }
-
-    function editReward(id){
-      const rewards = getRewards();
-      const reward = rewards.find(r => r.id === id);
-      if (!reward) return;
-      const newName = prompt('とくてんの名前', reward.name);
-      if (newName === null) return;
-      const trimmedName = newName.trim();
-      if (!trimmedName) return;
-      const newCostStr = prompt('ひつような コイン数', String(reward.cost));
-      if (newCostStr === null) return;
-      const newCost = parseInt(newCostStr, 10);
-      if (!newCost || newCost <= 0) return;
-      reward.name = trimmedName;
-      reward.cost = newCost;
-      setRewards(rewards);
-      renderRewards();
-    }
-
-    function openSourceSheet(context){
-      if (context === 'add') updatingIndex = -1;
-      document.getElementById('source-sheet-backdrop').classList.add('show');
-    }
-    function closeSourceSheet(){
-      document.getElementById('source-sheet-backdrop').classList.remove('show');
-    }
-    document.getElementById('source-sheet-backdrop').addEventListener('click', (e) => {
-      if (e.target.id === 'source-sheet-backdrop') closeSourceSheet();
-    });
-    function pickSource(kind){
-      closeSourceSheet();
-      if (kind === 'live') { startLiveScan(); return; }
-      if (kind === 'url') { openUrlSheet(); return; }
-      const inputId = kind === 'camera' ? 'qr-input-camera' : 'qr-input-library';
-      document.getElementById(inputId).click();
-    }
-
-    function openUrlSheet(){
-      document.getElementById('url-manual-input').value = '';
-      document.getElementById('url-sheet-backdrop').classList.add('show');
-    }
-    function closeUrlSheet(){
-      document.getElementById('url-sheet-backdrop').classList.remove('show');
-    }
-    document.getElementById('url-sheet-backdrop').addEventListener('click', (e) => {
-      if (e.target.id === 'url-sheet-backdrop') closeUrlSheet();
-    });
-    function submitManualUrl(){
-      let url = document.getElementById('url-manual-input').value.trim();
-      if (!url) { showToast('URLを いれてね'); return; }
-      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      try { new URL(url); } catch (err) { showToast('URLの形が正しくないみたい💦'); return; }
-      closeUrlSheet();
-      routeFoundUrl(url);
-    }
-
-    // QRコードのURLが見つかったときの共通処理(追加モード/更新モードで分岐)
-    function isDuplicateUrl(url, excludeIndex){
-      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-      return spots.some((s, i) => i !== excludeIndex && s.url === url);
-    }
-
-    function routeFoundUrl(url){
-      if (updatingIndex === -1) {
-        if (isDuplicateUrl(url, -1)) {
-          showToast('そのおみせは もう追加されているよ💡');
-          return;
-        }
-        pendingUrl = url;
-        document.getElementById('scanned-url').textContent = url;
-        openAddSheet();
-      } else {
-        if (isDuplicateUrl(url, updatingIndex)) {
-          showToast('ほかのおみせと URLが重複しているよ💡');
-          updatingIndex = -1;
-          return;
-        }
-        const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-        spots[updatingIndex].url = url;
-        localStorage.setItem('magic_spots', JSON.stringify(spots));
-        updatingIndex = -1;
-        loadSpots();
-        showToast('新しいパスにこうかん✨');
-      }
-    }
-
-    function onQrFileChosen(file, inputEl){
-      handleQR(file, routeFoundUrl);
-      inputEl.value = '';
-    }
-    document.getElementById('qr-input-camera').addEventListener('change', (e) => onQrFileChosen(e.target.files[0], e.target));
-    document.getElementById('qr-input-library').addEventListener('change', (e) => onQrFileChosen(e.target.files[0], e.target));
-
-    // その場でカメラ映像を継続スキャンする機能
-    let liveStream = null;
-    let liveScanActive = false;
-    let liveScanRAF = null;
-
-    async function startLiveScan(){
-      const overlay = document.getElementById('live-scan-overlay');
-      overlay.classList.add('show');
-      try {
-        liveStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
-          audio: false
-        });
-      } catch (err) {
-        overlay.classList.remove('show');
-        showToast('カメラを使用できなかったよ💦');
-        return;
-      }
-      const video = document.getElementById('live-video');
-      video.srcObject = liveStream;
-      try { await video.play(); } catch (err) { /* iOSのオートプレイ制限対策、無視してOK */ }
-      liveScanActive = true;
-      liveScanLoop();
-    }
-
-    function liveScanLoop(){
-      if (!liveScanActive) return;
-      const video = document.getElementById('live-video');
-      if (video.readyState >= video.HAVE_CURRENT_DATA && video.videoWidth > 0) {
-        const canvas = document.getElementById('live-canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const code = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
-        if (code && code.data && code.data.startsWith('http')) {
-          const url = code.data;
-          stopLiveScan();
-          routeFoundUrl(url);
-          return;
-        }
-      }
-      liveScanRAF = requestAnimationFrame(liveScanLoop);
-    }
-
-    function stopLiveScan(){
-      liveScanActive = false;
-      if (liveScanRAF) { cancelAnimationFrame(liveScanRAF); liveScanRAF = null; }
-      if (liveStream) { liveStream.getTracks().forEach(t => t.stop()); liveStream = null; }
-      document.getElementById('live-scan-overlay').classList.remove('show');
-    }
-
-    // 画像全体をキャンバスに描画してjsQRで探す(縮小サイズを何パターンか試す)
-    function scanWhole(source, w0, h0, maxDim) {
-      const scale = Math.min(1, maxDim / Math.max(w0, h0));
-      const w = Math.max(1, Math.round(w0 * scale));
-      const h = Math.max(1, Math.round(h0 * scale));
-      const canvas = document.getElementById('canvas');
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      canvas.width = w; canvas.height = h;
-      ctx.drawImage(source, 0, 0, w, h);
-      return jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'attemptBoth' });
-    }
-
-    // 写真の中でQRコードが小さく写っている場合(看板全体を撮った写真など)向けに、
-    // 画像をいくつかの重なり合ったタイルに分けて、それぞれ拡大しながら探す
-    function scanTiles(source, w0, h0) {
-      const grid = 3;
-      const overlap = 0.15;
-      const tileW = w0 / (grid - (grid - 1) * overlap);
-      const tileH = h0 / (grid - (grid - 1) * overlap);
-      const canvas = document.getElementById('canvas');
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      const OUT = 900;
-
-      for (let gy = 0; gy < grid; gy++) {
-        for (let gx = 0; gx < grid; gx++) {
-          const sx = Math.max(0, Math.round(gx * tileW * (1 - overlap)));
-          const sy = Math.max(0, Math.round(gy * tileH * (1 - overlap)));
-          const sw = Math.min(w0 - sx, Math.round(tileW));
-          const sh = Math.min(h0 - sy, Math.round(tileH));
-          if (sw <= 0 || sh <= 0) continue;
-
-          const outScale = OUT / Math.max(sw, sh);
-          const dw = Math.round(sw * outScale);
-          const dh = Math.round(sh * outScale);
-          canvas.width = dw; canvas.height = dh;
-          ctx.drawImage(source, sx, sy, sw, sh, 0, 0, dw, dh);
-          const code = jsQR(ctx.getImageData(0, 0, dw, dh).data, dw, dh, { inversionAttempts: 'attemptBoth' });
-          if (code) return code;
-        }
-      }
-      return null;
-    }
-
-    async function loadDrawableSource(file) {
-      if (window.createImageBitmap) {
-        try {
-          const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-          return { source: bitmap, width: bitmap.width, height: bitmap.height };
-        } catch (err) { /* フォールバックへ */ }
-      }
-      try {
-        return await loadViaImgTag(file);
-      } catch (err) { /* さらにフォールバックへ */ }
-
-      // ここまで失敗した場合、多くはHEIC/HEIF形式をブラウザが直接デコードできないケース
-      // (特にAndroid端末で発生しやすい)。heic2anyでJPEGに変換してから再度読み込む
-      if (window.heic2any) {
-        try {
-          const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-          const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
-          return await loadViaImgTag(jpegBlob);
-        } catch (err) { /* 最終的に失敗 */ }
-      }
-      throw new Error('decode-failed');
-    }
-
-    function loadViaImgTag(fileOrBlob) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => resolve({ source: img, width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
-          img.onerror = () => reject(new Error('decode-failed'));
-          img.src = e.target.result;
-        };
-        reader.onerror = () => reject(new Error('read-failed'));
-        reader.readAsDataURL(fileOrBlob);
-      });
-    }
-
-    async function handleQR(file, callback) {
-      if (!file) return;
-      showToast('QRコードを さがしています…');
-      let loaded;
-      try {
-        loaded = await loadDrawableSource(file);
-      } catch (err) {
-        showToast('この写真は読み込めなかったよ💦 べつの写真で試してみてね');
-        return;
-      }
-
-      const { source, width, height } = loaded;
-      let code = null;
-      for (const maxDim of [1600, 1100, 900, 2200, 700]) {
-        code = scanWhole(source, width, height, maxDim);
-        if (code) break;
-      }
-      if (!code) code = scanTiles(source, width, height);
-      if (source.close) source.close();
-
-      if (code && code.data && code.data.startsWith('http')) {
-        callback(code.data);
-      } else {
-        showToast('QRコードが見つからなかったよ💦');
-      }
-    }
-
-    function spawnConfetti() {
-      const colors = ['#FF3B6E', '#FF9500', '#6C5CE7', '#A0E7E5', '#FFB5C0', '#B4F8C8'];
-      const emojis = ['🎉', '✨', '🎊', '⭐', '🌸'];
-      const count = 30;
-      for (let i = 0; i < count; i++) {
-        const el = document.createElement('div');
-        el.className = 'confetti-piece';
-        el.style.left = (Math.random() * 100) + 'vw';
-        el.style.setProperty('--drift', (Math.random() * 160 - 80) + 'px');
-        el.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
-        const duration = 1.4 + Math.random() * 1.2;
-        const delay = Math.random() * 0.2;
-        el.style.animationDuration = duration + 's';
-        el.style.animationDelay = delay + 's';
-        if (Math.random() < 0.4) {
-          el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-          el.style.fontSize = (13 + Math.random() * 12) + 'px';
-        } else {
-          const size = 6 + Math.random() * 6;
-          el.style.width = size + 'px';
-          el.style.height = (size * 0.5 + size) + 'px';
-          el.style.background = colors[Math.floor(Math.random() * colors.length)];
-          el.style.borderRadius = Math.random() < 0.5 ? '50%' : '3px';
-        }
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), (duration + delay) * 1000 + 150);
-      }
-    }
-
-    function saveSpot() {
-      const name = document.getElementById('spot-name').value.trim();
-      const url = pendingUrl;
-      if (!name) { showToast('なまえを いれてね'); return; }
-      if (isDuplicateUrl(url, -1)) {
-        showToast('そのおみせは もう追加されているよ💡');
-        closeAddSheet();
-        return;
-      }
-
-      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-      spots.push({ name, url });
-      localStorage.setItem('magic_spots', JSON.stringify(spots));
-
-      spawnConfetti();
-      setTimeout(() => {
-        closeAddSheet();
-        loadSpots();
-      }, 500);
-    }
-
-    function loadSpots() {
-      const container = document.getElementById('card-container');
-      container.innerHTML = '';
-      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-
-      if (spots.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <div class="icon-tile" style="background:linear-gradient(to bottom, #FFC1D6, #FFEFB0);">🥚</div>
-            <div class="msg1">まだ おみせがない</div>
-            <div class="msg2">下の「＋」から QRコードを読み込んで<br>お気に入りのおみせを追加しよう</div>
-          </div>`;
-        return;
-      }
-
-      spots.forEach((spot, index) => {
-        const key = spot.name + spot.url;
-        const face = pickFor(CREATURES, key);
-        const [c1, c2] = pickFor(PALETTES, key + 'p');
-        const claimedToday = spot.lastCoinDate === todayStr();
-        const div = document.createElement('div');
-        div.className = 'shop-card';
-        div.style.animationDelay = (index * 0.04) + 's';
-        div.innerHTML = `
-          <button class="btn-update" onclick="startUpdate(event, ${index})">↻</button>
-          ${claimedToday ? '<div class="claim-badge">🪙済</div>' : ''}
-          <div class="icon-tile" style="background:linear-gradient(to bottom, ${c1}, ${c2});">${face}</div>
-          <div class="shop-title">${escapeHtml(spot.name)}</div>
-          <div class="shop-sub">${escapeHtml(hostOf(spot.url))}</div>
-        `;
-
-        let pressTimer = null;
-        div.addEventListener('pointerdown', (ev) => {
-          if (ev.target.closest('.btn-update')) return;
-          pressTimer = setTimeout(() => confirmDelete(index), 650);
-        });
-        const clearPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
-        div.addEventListener('pointerup', clearPress);
-        div.addEventListener('pointerleave', clearPress);
-
-        div.addEventListener('click', (ev) => {
-          if (ev.target.closest('.btn-update')) return;
-          openSpot(div, index);
-        });
-
-        container.appendChild(div);
-      });
-    }
-
-    function escapeHtml(str){
-      const d = document.createElement('div');
-      d.textContent = str;
-      return d.innerHTML;
-    }
-
-    function openSpot(cardEl, index) {
-      cardEl.classList.add('opening');
-      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-      const spot = spots[index];
-      const today = todayStr();
-      if (spot.lastCoinDate !== today) {
-        spot.lastCoinDate = today;
-        localStorage.setItem('magic_spots', JSON.stringify(spots));
-        flyCoin(cardEl);
-        setCoins(getCoins() + 1);
-      }
-      setTimeout(() => { window.location.href = spot.url; }, 280);
-    }
-
-    function flyCoin(fromEl) {
-      const rect = fromEl.getBoundingClientRect();
-      const badge = document.getElementById('coin-badge');
-      const targetRect = badge.getBoundingClientRect();
-      const coin = document.createElement('div');
-      coin.className = 'coin-fly';
-      coin.textContent = '🪙';
-      coin.style.left = (rect.left + rect.width / 2 - 10) + 'px';
-      coin.style.top = (rect.top + rect.height / 2 - 10) + 'px';
-      coin.style.opacity = '1';
-      document.body.appendChild(coin);
-      requestAnimationFrame(() => {
-        const dx = targetRect.left + targetRect.width / 2 - (rect.left + rect.width / 2);
-        const dy = targetRect.top + targetRect.height / 2 - (rect.top + rect.height / 2);
-        coin.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`;
-        coin.style.opacity = '0';
-      });
-      setTimeout(() => {
-        coin.remove();
-        updateCoinDisplay();
-        badge.classList.add('bump');
-        setTimeout(() => badge.classList.remove('bump'), 400);
-      }, 550);
-    }
-
-    function startUpdate(ev, index) {
-      ev.stopPropagation();
-      updatingIndex = index;
-      openSourceSheet('update');
-    }
-
-    function confirmDelete(index) {
-      const spots = JSON.parse(localStorage.getItem('magic_spots') || '[]');
-      const name = spots[index] ? spots[index].name : '';
-      if (confirm(`「${name}」を てばなす？`)) {
-        spots.splice(index, 1);
-        localStorage.setItem('magic_spots', JSON.stringify(spots));
-        loadSpots();
-        showToast('バイバイ👋');
-      }
-    }
-  </script>
-</body>
-</html>
+      filtered.forEach(r => {
+        if (FO
