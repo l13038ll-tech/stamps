@@ -1,436 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#ff4f8b">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<title>おみせポケット</title>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-<style>
-  :root {
-    --pink: #ff4f8b;
-    --ink: #28252c;
-    --muted: #77727e;
-    --bg: #fff6fa;
-    --line: #f1dce6;
-    --gold: #b36f00;
-    --gold-dim: #fff0bd;
-    --fill: rgba(120,120,128,0.12);
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; overscroll-behavior-y: none; }
-  body {
-    margin: 0; min-height: 100vh; color: var(--ink);
-    background: radial-gradient(circle at 88% 5%, #d9f8f2 0 13%, transparent 14%), var(--bg);
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* Header */
-  header {
-    position: sticky; top: 0; z-index: 100;
-    padding: calc(env(safe-area-inset-top) + 14px) 20px 14px;
-    background: #fff6faef; border-bottom: 1px solid var(--line);
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  }
-  .head { display: flex; align-items: center; justify-content: space-between; }
-  h1 { margin: 0; font-size: 25px; letter-spacing: -.04em; }
-  .sub { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
-  .coins {
-    padding: 8px 11px; border-radius: 999px; background: var(--gold-dim);
-    color: var(--gold); font-size: 13px; font-weight: 800; cursor: pointer;
-    display: flex; align-items: center; gap: 4px; white-space: nowrap;
-  }
-  .coins.bump { animation: coin-bump 0.35s ease; }
-  @keyframes coin-bump { 0%{transform:scale(1);} 45%{transform:scale(1.18);} 100%{transform:scale(1);} }
-  .coin-fly {
-    position: fixed; font-size: 20px; z-index: 2500; pointer-events: none;
-    transition: transform 0.55s cubic-bezier(.3,.85,.4,1), opacity 0.55s ease;
-  }
-
-  /* Main Layout */
-  main { padding: 18px 14px 118px; max-width: 720px; margin: auto; }
-  .hint {
-    display: flex; gap: 10px; align-items: center; padding: 12px 14px;
-    background: #fff; border: 1px solid var(--line); border-radius: 18px;
-    font-size: 13px; line-height: 1.45; margin-bottom: 16px;
-  }
-  .hint img { width: 42px; height: 42px; object-fit: contain; }
-
-  /* Grid & Cards */
-  #card-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .spot {
-    min-height: 154px; padding: 12px; border: 0; border-radius: 20px;
-    color: var(--ink); text-align: left; background: #fff;
-    box-shadow: 0 4px 16px #c26e9420; cursor: pointer; position: relative;
-    animation: card-in 0.35s cubic-bezier(.2,.9,.3,1.1) backwards;
-    transition: transform .12s ease, box-shadow .12s ease;
-  }
-  .spot:active { transform: scale(0.97); box-shadow: 0 2px 8px #c26e9415; }
-  .spot.opening { animation: card-open 0.32s ease forwards; }
-  @keyframes card-in { 0%{ opacity:0; transform:translateY(10px) scale(0.96); } 100%{ opacity:1; transform:translateY(0) scale(1); } }
-  @keyframes card-open { 0%{ transform:scale(1); opacity:1; } 100%{ transform:scale(0.9); opacity:0; } }
-  
-  .spot img { width: 58px; height: 58px; object-fit: contain; border-radius: 16px; background: #ecfff8; }
-  .spot strong { display: block; margin-top: 8px; font-size: 15px; overflow-wrap: anywhere; }
-  .spot small { display: block; margin-top: 4px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  
-  .edit {
-    position: absolute; top: 9px; right: 9px; border: 0; background: #f7edf2;
-    border-radius: 50%; width: 29px; height: 29px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; color: var(--muted);
-  }
-  .edit:active { opacity: 0.6; }
-  .claim-badge {
-    position: absolute; top: 9px; left: 9px; font-size: 11px; font-weight: 800;
-    color: var(--gold); background: var(--gold-dim); border-radius: 10px; padding: 2px 6px;
-  }
-
-  /* Empty State */
-  .empty {
-    grid-column: 1 / -1; padding: 44px 16px; text-align: center;
-    background: #fff; border: 1px dashed #eeb6cd; border-radius: 24px;
-  }
-  .empty img { width: 92px; margin-bottom: 10px; }
-  .empty h2 { margin: 0 0 5px; font-size: 17px; }
-  .empty p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
-
-  /* Bottom Actions */
-  .bottom {
-    position: fixed; inset: auto 0 0; z-index: 1000;
-    padding: 12px 20px calc(env(safe-area-inset-bottom) + 13px);
-    text-align: center; background: #fff6faef; border-top: 1px solid var(--line);
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  }
-  .actions { display: flex; justify-content: center; gap: 10px; }
-  .action {
-    border: 0; border-radius: 16px; padding: 12px 14px; color: var(--ink);
-    background: #fff; font: 700 13px inherit; box-shadow: 0 3px 12px #c26e9420; cursor: pointer;
-  }
-  .action.camera { color: #fff; background: var(--pink); box-shadow: 0 5px 14px #ff4f8b66; flex: 1; }
-  .action:active { transform: scale(0.97); }
-
-  /* Bottom Sheet Modals */
-  .sheet-backdrop { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(37, 19, 28, 0.4); }
-  .sheet {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 2001;
-    background: #fff; border-radius: 24px 24px 0 0;
-    padding: 10px 20px calc(env(safe-area-inset-bottom) + 22px);
-    transform: translateY(100%); transition: transform 0.32s cubic-bezier(.25,.9,.35,1.1);
-    box-shadow: 0 -8px 30px #0003;
-  }
-  .sheet-backdrop.show { display: block; }
-  .sheet-backdrop.show .sheet { transform: translateY(0); }
-  .sheet-handle { width: 36px; height: 5px; border-radius: 3px; background: #e6cfe0; margin: 6px auto 14px; }
-  .sheet-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .sheet-title { font-size: 19px; font-weight: 700; margin: 0; }
-  .sheet-url { font-size: 12px; color: var(--muted); margin: -8px 0 14px; word-break: break-all; }
-  
-  .sheet input[type="text"], .sheet input[type="number"] {
-    width: 100%; padding: 14px; border-radius: 13px; border: 0;
-    background: #f6eff3; margin-bottom: 8px; font-size: 16px; color: var(--ink);
-    font-family: inherit; outline: none;
-  }
-  .sheet input::placeholder { color: var(--muted); }
-  
-  .btn-primary {
-    width: 100%; padding: 14px; border: none; border-radius: 13px; cursor: pointer;
-    background: var(--pink); color: #fff; font-family: inherit; font-weight: 800; font-size: 16px; margin-top: 8px;
-  }
-  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
-  .btn-secondary {
-    width: 100%; padding: 14px; border: none; border-radius: 13px; cursor: pointer;
-    background: #f6eff3; color: var(--ink); font-family: inherit; font-weight: 800; font-size: 16px; margin-top: 8px;
-  }
-  .btn-secondary:active { opacity: 0.85; transform: scale(0.98); }
-  .btn-text {
-    width: 100%; padding: 12px; border: none; background: none; cursor: pointer;
-    color: var(--muted); font-family: inherit; font-weight: 600; font-size: 14px; margin-top: 2px;
-  }
-
-  /* Tickets styling */
-  .ticket-card {
-    position: relative; overflow: hidden; margin: 10px 0; padding: 15px 16px;
-    background: linear-gradient(105deg, #fff3c6, #fffdf4);
-    border: 2px dashed #f3c965; border-radius: 18px; box-shadow: 0 3px 12px #c26e9420;
-  }
-  .ticket-card:before, .ticket-card:after {
-    content: ""; position: absolute; top: 50%; width: 20px; height: 20px;
-    border-radius: 50%; background: #fff; transform: translateY(-50%);
-  }
-  .ticket-card:before { left: -12px; }
-  .ticket-card:after { right: -12px; }
-  .ticket-top { display: flex; justify-content: space-between; align-items: center; font-weight: 900; color: var(--ink); font-size: 16px;}
-  .ticket-sub { margin: 4px 0 11px; color: #806720; font-size: 12px; font-weight: bold; }
-  
-  .ticket-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-  .ticket-row.used { opacity: 0.6; filter: grayscale(1); }
-  .ticket-row-info { flex: 1; min-width: 0; }
-  .ticket-row-name { font-size: 14px; font-weight: 700; color: var(--ink); }
-  .ticket-row-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .btn-use-ticket {
-    border: none; border-radius: 999px; padding: 7px 12px; font-family: inherit;
-    font-weight: 800; font-size: 12px; background: var(--pink); color: #fff; cursor: pointer;
-  }
-  .btn-use-ticket:active { transform: scale(0.95); }
-  .ticket-used-badge {
-    font-size: 11px; font-weight: 800; color: #fff; background: #666;
-    padding: 5px 9px; border-radius: 999px;
-  }
-  #tickets-list { max-height: 50vh; overflow-y: auto; margin-bottom: 10px; }
-
-  /* Rewards list */
-  .rewards-coin-line { font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
-  .rewards-coin-line span { color: var(--gold); font-weight: 800; }
-  #rewards-list { max-height: 38vh; overflow-y: auto; margin-bottom: 10px; }
-  .rewards-empty { text-align: center; color: var(--muted); font-size: 13.5px; padding: 18px 0; }
-  .reward-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-  .reward-info { flex: 1; min-width: 0; }
-  .reward-name { font-size: 14.5px; font-weight: 600; color: var(--ink); }
-  .reward-cost { font-size: 12.5px; color: var(--gold); font-weight: 800; margin-top: 1px; }
-  .btn-redeem {
-    border: none; border-radius: 999px; padding: 8px 12px; font-family: inherit;
-    font-weight: 800; font-size: 12px; background: var(--gold-dim); color: #9a6100; cursor: pointer;
-  }
-  .btn-redeem:disabled { background: #eee; color: #999; }
-  .btn-redeem:active:not(:disabled) { transform: scale(0.95); }
-  
-  .btn-reward-del, .btn-reward-edit {
-    border: none; background: #f6eff3; color: var(--muted); width: 28px; height: 28px;
-    border-radius: 50%; font-size: 12px; cursor: pointer; flex-shrink: 0; display:flex; align-items:center; justify-content:center;
-  }
-  .rewards-add-row { display: flex; gap: 8px; margin: 4px 0 12px; }
-  #reward-name-input { flex: 1; min-width: 0; }
-  #reward-cost-input { width: 80px; }
-  .btn-reward-add {
-    width: 44px; border: none; border-radius: 13px; background: var(--pink);
-    color: #fff; font-size: 20px; cursor: pointer; flex-shrink: 0; font-weight:bold;
-  }
-
-  /* Live camera scan */
-  #live-scan-overlay {
-    display: none; position: fixed; inset: 0; z-index: 4000; background: #201d23;
-    align-items: center; justify-content: center; flex-direction: column; padding: 20px;
-  }
-  #live-scan-overlay.show { display: flex; }
-  .scanner-header { text-align: center; color: #fff; margin-bottom: 20px; width:100%; max-width: 520px;}
-  .scanner-header h2 { margin: 0 0 8px; font-size: 18px; }
-  .scanner-header p { margin: 0; color: #ddd; font-size: 13px; }
-  .live-scan-frame {
-    position: relative; width: 100%; max-width: 520px; aspect-ratio: 3/4;
-    border-radius: 16px; overflow: hidden; background: #000;
-  }
-  #live-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .live-scan-line {
-    position: absolute; left: 0; right: 0; height: 3px; background: var(--pink);
-    box-shadow: 0 0 12px var(--pink); animation: scan-line 2s ease-in-out infinite; z-index: 2;
-  }
-  @keyframes scan-line { 0%{ top:0; } 50%{ top:100%; } 100%{ top:0; } }
-  .btn-close-scanner {
-    width: 100%; max-width: 520px; margin-top: 20px; border: 0; border-radius: 13px;
-    padding: 14px; background: #fff; color: var(--ink); font: 800 15px inherit; cursor: pointer;
-  }
-
-  /* Toast & Confetti */
-  .toast {
-    position: fixed; left: 50%; transform: translateX(-50%);
-    top: calc(env(safe-area-inset-top) + 78px);
-    background: rgba(40, 37, 44, 0.92); color: #fff; padding: 10px 18px; border-radius: 999px;
-    font-size: 13px; font-weight: 700; z-index: 3000; backdrop-filter: blur(10px);
-    opacity: 0; pointer-events: none; transition: opacity .25s ease, top .25s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-  .toast.show { opacity: 1; top: calc(env(safe-area-inset-top) + 88px); }
-  .confetti-piece {
-    position: fixed; top: -24px; z-index: 2600; pointer-events: none; will-change: transform, opacity;
-    animation-name: confetti-fall; animation-timing-function: cubic-bezier(.25,.46,.45,.94); animation-fill-mode: forwards;
-  }
-  @keyframes confetti-fall {
-    0%{ transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
-    100%{ transform: translateY(105vh) translateX(var(--drift)) rotate(var(--rot)); opacity: 0.85; }
-  }
-
-  /* Hidden Game */
-  #game-overlay {
-    display: none; position: fixed; inset: 0; z-index: 5000;
-    background: #000; color: #0f0; font-family: monospace;
-    flex-direction: column; align-items: center; justify-content: center;
-  }
-  #game-overlay.show { display: flex; }
-  #game-canvas { background: #111; border: 2px solid #0f0; max-width: 100%; touch-action: none; }
-  .game-close {
-    position: absolute; top: calc(env(safe-area-inset-top) + 15px); right: 15px;
-    background: #333; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ff4f8b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>おみせポケット</title>
+  <style>
+    :root{--pink:#ff4f8b;--ink:#28252c;--muted:#77727e;--bg:#fff6fa;--line:#f1dce6}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;min-height:100vh;color:var(--ink);background:radial-gradient(circle at 88% 5%,#d9f8f2 0 13%,transparent 14%),var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}header{position:sticky;top:0;z-index:2;padding:calc(env(safe-area-inset-top) + 14px) 20px 14px;background:#fff6faef;border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}.head{display:flex;align-items:center;justify-content:space-between}h1{margin:0;font-size:25px;letter-spacing:-.04em}.sub{margin:3px 0 0;color:var(--muted);font-size:12px}.coins{padding:8px 11px;border-radius:999px;background:#fff0bd;color:#b36f00;font-size:13px;font-weight:800}main{padding:18px 14px 118px;max-width:720px;margin:auto}.hint{display:flex;gap:10px;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:18px;font-size:13px;line-height:1.45}.hint img{width:42px;height:42px;object-fit:contain}#spots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}.spot{min-height:154px;padding:12px;border:0;border-radius:20px;color:var(--ink);text-align:left;background:#fff;box-shadow:0 4px 16px #c26e9420;cursor:pointer;position:relative}.spot:active,.action:active{transform:scale(.97)}.spot img{width:58px;height:58px;object-fit:contain;border-radius:16px;background:#ecfff8}.spot strong{display:block;margin-top:8px;font-size:15px;overflow-wrap:anywhere}.spot small{display:block;margin-top:4px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.edit{position:absolute;top:9px;right:9px;border:0;background:#f7edf2;border-radius:50%;width:29px;height:29px;cursor:pointer}.empty{grid-column:1/-1;padding:44px 16px;text-align:center;background:#fff;border:1px dashed #eeb6cd;border-radius:24px}.empty img{width:92px}.empty p{color:var(--muted);font-size:14px;line-height:1.6}.bottom{position:fixed;inset:auto 0 0;z-index:2;padding:12px 20px calc(env(safe-area-inset-bottom) + 13px);text-align:center;background:#fff6faef;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.actions{display:flex;justify-content:center;gap:10px}.action{border:0;border-radius:16px;padding:10px 14px;color:var(--ink);background:#fff;font:700 13px inherit;box-shadow:0 3px 12px #c26e9420;cursor:pointer}.action.camera{color:#fff;background:var(--pink);box-shadow:0 5px 14px #ff4f8b66}dialog{width:min(100%,520px);margin:auto 0 0;border:0;border-radius:24px 24px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom) + 20px);box-shadow:0 -8px 30px #0003}dialog::backdrop{background:#25131c66}dialog h2{margin:0 0 10px;font-size:19px}input{width:100%;border:0;border-radius:13px;padding:14px;background:#f6eff3;font:inherit;margin:8px 0}.url{color:var(--muted);font-size:12px;overflow-wrap:anywhere}.primary,.secondary{width:100%;border:0;padding:14px;border-radius:13px;font:inherit;font-weight:800;cursor:pointer;margin-top:8px}.primary{background:var(--pink);color:#fff}.secondary{background:#f6eff3;color:var(--ink)}
+    .rewards{margin-top:16px}.reward-head{display:flex;align-items:center;justify-content:space-between;margin:0 4px 8px}.reward-head h2{margin:0;font-size:16px}.reward-head span{font-size:12px;color:var(--muted)}.exchange{border:0;border-radius:999px;padding:8px 12px;background:#fff0bd;color:#9a6100;font:800 12px inherit;cursor:pointer}.exchange:disabled{background:#eee;color:#999}.ticket{position:relative;overflow:hidden;margin:10px 0;padding:15px 16px;background:linear-gradient(105deg,#fff3c6,#fffdf4);border:2px dashed #f3c965;border-radius:18px;box-shadow:0 3px 12px #c26e9420}.ticket:before,.ticket:after{content:"";position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:var(--bg);transform:translateY(-50%)}.ticket:before{left:-12px}.ticket:after{right:-12px}.ticket.used{filter:grayscale(1);opacity:.68;background:#e5e5e5;border-color:#a4a4a4}.ticket-top{display:flex;justify-content:space-between;align-items:center;font-weight:900}.ticket-sub{margin:4px 0 11px;color:#806720;font-size:12px}.ticket.used .ticket-sub{color:#666}.used-label{padding:5px 8px;border-radius:999px;background:#666;color:#fff;font-size:11px}.swipe-wrap{display:flex;align-items:center;gap:8px;background:#fff9e5;border-radius:999px;padding:6px 9px}.ticket.used .swipe-wrap{background:#d5d5d5}.swipe-note{font-size:11px;font-weight:700;white-space:nowrap}.swipe{width:100%;accent-color:var(--pink)}.ticket-empty{padding:13px 15px;border:1px dashed #e6cfe0;border-radius:16px;background:#fff;color:var(--muted);font-size:13px}.scanner{width:100%;max-width:520px;margin:auto 0 0;padding:18px;border-radius:24px 24px 0 0;background:#201d23;color:#fff}.scanner h2{margin:0 0 8px;font-size:18px}.scanner p{margin:0 0 14px;color:#ddd;font-size:13px}.scanner video{display:block;width:100%;max-height:62vh;object-fit:cover;border-radius:16px;background:#000}.scanner button{width:100%;margin-top:12px;border:0;border-radius:13px;padding:13px;background:#fff;color:#28252c;font:800 15px inherit;cursor:pointer}
+  </style>
 </head>
 <body>
-  <header>
-    <div class="head">
-      <div>
-        <h1>おみせポケット</h1>
-        <p class="sub">QRコードから、お気に入りのおみせを集めよう</p>
-      </div>
-      <div class="coins" id="coin-badge" onclick="openRewardsSheet()">⭐ <span id="coin-count">0</span></div>
-    </div>
-  </header>
-
-  <main>
-    <div class="hint">
-      <img src="icons/icon-192.png" alt="オリジナルのマスコット" onerror="this.style.display='none'">
-      <span>カードをタップするとおみせを開けるよ。長押しで削除、鉛筆ボタンでQRを更新できます。</span>
-    </div>
-    <div id="card-container"></div>
-  </main>
-
-  <div class="bottom">
-    <div class="actions">
-      <button class="action" onclick="pickSource('url')" aria-label="URL入力">🔗 URL</button>
-      <button class="action" onclick="pickSource('library')">写真から選ぶ</button>
-      <button class="action camera" onclick="startLiveScan()">📷 カメラで撮影</button>
-    </div>
-  </div>
-
-  <input type="file" id="qr-input-camera" style="display:none" accept="image/*" capture="environment">
-  <input type="file" id="qr-input-library" style="display:none" accept="image/*">
-  <canvas id="canvas" style="display:none;"></canvas>
-  <canvas id="live-canvas" style="display:none;"></canvas>
-
-  <!-- Modals -->
-  <div id="url-sheet-backdrop" class="sheet-backdrop">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header"><h2 class="sheet-title">URLを入力</h2></div>
-      <input type="text" id="url-manual-input" placeholder="https://..." inputmode="url" autocapitalize="off" autocorrect="off">
-      <button class="btn-primary" onclick="submitManualUrl()">つぎへ</button>
-      <button class="btn-secondary" onclick="closeUrlSheet()">キャンセル</button>
-    </div>
-  </div>
-
-  <div id="live-scan-overlay">
-    <div class="scanner-header">
-      <h2>QRコードをかざしてね</h2>
-      <p>カメラへのアクセスを許可してください。</p>
-    </div>
-    <div class="live-scan-frame">
-      <video id="live-video" playsinline muted autoplay></video>
-      <div class="live-scan-line"></div>
-    </div>
-    <button class="btn-close-scanner" onclick="stopLiveScan()">やめる</button>
-  </div>
-
-  <div id="add-sheet-backdrop" class="sheet-backdrop">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header"><h2 class="sheet-title">おみせの名前をつけよう</h2></div>
-      <div class="sheet-url" id="scanned-url"></div>
-      <input type="text" id="spot-name" placeholder="例：ケーキやさん" maxlength="24">
-      <button class="btn-primary" onclick="saveSpot()">保存する</button>
-      <button class="btn-secondary" onclick="closeAddSheet()">キャンセル</button>
-    </div>
-  </div>
-
-  <div id="rewards-sheet-backdrop" class="sheet-backdrop">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header" id="rewards-header">
-        <h2 class="sheet-title">🎁 ごほうびチケット</h2>
-      </div>
-      <div class="rewards-coin-line">たまったコイン <span id="rewards-coin-count">⭐ 0</span></div>
-      <div id="rewards-list"></div>
-      <div id="rewards-admin-row" class="rewards-add-row" style="display:none;">
-        <input type="text" id="reward-name-input" placeholder="とくてんの名前">
-        <input type="number" id="reward-cost-input" placeholder="コスト" min="1">
-        <button class="btn-reward-add" onclick="addReward()">＋</button>
-      </div>
-      <button class="btn-secondary" onclick="openTicketsListSheet()">🎟 獲得したチケットを見る</button>
-      <button class="btn-text" onclick="closeRewardsSheet()">とじる</button>
-    </div>
-  </div>
-
-  <div id="ticket-sheet-backdrop" class="sheet-backdrop">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header"><h2 class="sheet-title">こうかんしたよ！</h2></div>
-      <div class="ticket-card" id="ticket-card">
-        <div class="ticket-top">
-          <span id="ticket-name-out">🎟 ガチャガチャ 1回無料券</span>
-          <span style="font-size:12px; color:var(--pink);">NEW</span>
-        </div>
-        <div class="ticket-sub">好きなガチャガチャを1回無料でまわせます</div>
-        <div style="font-size:11px; color:#806720; font-weight:bold;">
-          <span id="ticket-date-out"></span> ・ <span id="ticket-serial-out"></span>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="closeTicketSheet()" style="margin-top:14px;">とじる</button>
-    </div>
-  </div>
-
-  <div id="tickets-list-sheet-backdrop" class="sheet-backdrop">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header"><h2 class="sheet-title">獲得したチケット</h2></div>
-      <div id="tickets-list"></div>
-      <button class="btn-secondary" onclick="closeTicketsListSheet()">とじる</button>
-    </div>
-  </div>
-
-  <!-- Hidden Game -->
-  <div id="game-overlay">
-    <button class="game-close" onclick="closeGame()">✕ やめる</button>
-    <h2 style="margin-bottom:10px;">SPACE DEFENDER</h2>
-    <canvas id="game-canvas" width="300" height="400"></canvas>
-    <div style="margin-top:15px; font-size:12px;">スワイプ：移動 ／ タップ：発射</div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
+  <header><div class="head"><div><h1>おみせポケット</h1><p class="sub">QRコードから、お気に入りのおみせを集めよう</p></div><button class="coins" id="coin-badge" aria-label="ごほうびと交換">⭐ <span id="coins">0</span></button></div></header>
+  <main><div class="hint"><img src="icons/icon-192.png" alt="オリジナルのマスコット"><span>カードをタップするとおみせを開けるよ。長押しで削除、鉛筆ボタンでQRを更新できます。</span></div><section class="rewards" aria-label="無料券"><div class="reward-head"><h2>🎁 ごほうびチケット</h2><span>150コインで1回無料券</span></div><div id="tickets"></div></section><section id="spots" aria-live="polite"></section></main>
+  <div class="bottom"><div class="actions"><button class="action" id="url-add">URL入力</button><button class="action" id="add">写真から選ぶ</button><button class="action camera" id="camera-add">カメラで撮影</button></div></div>
+  <input id="file" type="file" accept="image/*" hidden><input id="camera" type="file" accept="image/*" capture="environment" hidden><canvas id="canvas" hidden></canvas>
+  <dialog id="dialog"><h2>おみせの名前をつけよう</h2><div class="url" id="url"></div><input id="name" maxlength="24" placeholder="例：ケーキやさん"><button class="primary" id="save">保存する</button><button class="secondary" id="cancel">キャンセル</button></dialog><dialog id="url-dialog"><h2>URLを入力</h2><input id="manual-url" type="url" inputmode="url" placeholder="https://..."><button class="primary" id="save-url">つぎへ</button><button class="secondary" id="cancel-url">キャンセル</button></dialog><dialog id="reward-dialog"><h2>ごほうびと交換</h2><p class="url">たまったコインでチケットに交換しよう。</p><div id="reward-list"></div><button class="secondary" id="close-rewards">とじる</button></dialog><dialog class="scanner" id="scanner"><h2>QRコードをかざしてね</h2><p>カメラへのアクセスを許可してください。</p><video id="camera-video" playsinline muted></video><button id="close-camera">やめる</button></dialog>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script>
-    let updatingIndex = -1;
-    let pendingUrl = '';
-
-    // 【確認用】初回起動時、もしコインが未設定ならテスト用に30枚を初期セットする
-    if (!localStorage.getItem('magic_coins')) {
-      localStorage.setItem('magic_coins', '30');
-    }
-
-    window.onload = () => { loadSpots(); updateCoinDisplay(); };
-
-    const DEFAULT_REWARDS = [
-      { id:'r1', name:'ちいさなごほうび', cost:30 },
-      { id:'r3', name:'スペシャルなごほうび', cost:200 }
-    ];
-    const FORCE_NAMES = { r1:'ちいさなごほうび', r3:'スペシャルなごほうび' };
-
-    function getCoins(){ return parseInt(localStorage.getItem('magic_coins') || '0', 10); }
-    function setCoins(n){ localStorage.setItem('magic_coins', String(n)); }
-    function updateCoinDisplay(){
-      document.getElementById('coin-count').textContent = getCoins();
-      const rc = document.getElementById('rewards-coin-count');
-      if (rc) rc.textContent = '⭐ ' + getCoins();
-    }
-
-    function todayStr(){
-      const d = new Date();
-      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
-      return local.toISOString().slice(0, 10);
-    }
-    function getRewards(){
-      const raw = localStorage.getItem('magic_rewards');
-      if (raw === null) {
-        localStorage.setItem('magic_rewards', JSON.stringify(DEFAULT_REWARDS));
-        return DEFAULT_REWARDS.slice();
-      }
-      let rewards = JSON.parse(raw);
-      let changed = false;
-      const filtered = rewards.filter(r => {
-        if (r.id === 'r2' && r.name === 'すきなおやつ') { changed = true; return false; }
-        return true;
-      });
-      filtered.forEach(r => {
-        if (FO
+    const spotKey='omise-pocket-spots',coinKey='omise-pocket-coins',ticketKey='omise-pocket-tickets',coinHistoryKey='omise-pocket-coin-history';let pending='',editing=-1,cameraStream=null,scanning=false;
+    const $=s=>document.querySelector(s),get=()=>JSON.parse(localStorage.getItem(spotKey)||'[]'),put=v=>localStorage.setItem(spotKey,JSON.stringify(v)),getCoins=()=>Number(localStorage.getItem(coinKey)||0),setCoins=n=>localStorage.setItem(coinKey,String(n)),getTickets=()=>JSON.parse(localStorage.getItem(ticketKey)||'[]'),putTickets=v=>localStorage.setItem(ticketKey,JSON.stringify(v));
+    const today=()=>new Date().toLocaleDateString('sv-SE');
+    function awardCoin(url){let history=JSON.parse(localStorage.getItem(coinHistoryKey)||'{"day":"","urls":[]}');if(history.day!==today())history={day:today(),urls:[]};if(history.urls.includes(url))return false;history.urls.push(url);localStorage.setItem(coinHistoryKey,JSON.stringify(history));setCoins(getCoins()+1);return true}
+    const host=u=>{try{return new URL(u).host}catch{return u}};
+    function renderTickets(){const coins=getCoins(),tickets=getTickets(),box=$('#tickets');let html=`<div class="reward-head"><button class="exchange" id="exchange" ${coins<150?'disabled':''}>150コインで交換</button></div>`;if(!tickets.length)html+='<div class="ticket-empty">コインを150ためると、ガチャガチャ1回無料券に交換できるよ。</div>';tickets.slice().reverse().forEach(t=>{const used=t.status==='used';html+=`<article class="ticket ${used?'used':''}"><div class="ticket-top"><span>🎟 ガチャガチャ 1回無料券</span>${used?'<span class="used-label">使用済み</span>':'<span>FREE</span>'}</div><div class="ticket-sub">好きなガチャガチャを1回無料でまわせます</div><div class="swipe-wrap"><span class="swipe-note">${used?'このチケットは使用済み':'右へスワイプして使用'}</span><input class="swipe" type="range" min="0" max="100" value="0" ${used?'disabled':''} data-id="${t.id}" aria-label="チケットを使用済みにする"></div></article>`});box.innerHTML=html;$('#exchange').onclick=()=>{if(getCoins()<150)return;const list=getTickets();list.push({id:Date.now(),status:'available'});putTickets(list);setCoins(getCoins()-150);render()};box.querySelectorAll('.swipe').forEach(slider=>slider.onchange=e=>{if(Number(e.target.value)>=90){const list=getTickets();const ticket=list.find(t=>String(t.id)===e.target.dataset.id);if(ticket){ticket.status='used';putTickets(list);render()}}else e.target.value=0})}
+    function render(){const spots=get(),box=$('#spots');$('#coins').textContent=getCoins();renderTickets();if(!spots.length){box.innerHTML='<div class="empty"><img src="icons/icon-512.png" alt=""><h2>まだおみせがないよ</h2><p>下のボタンからQRコードを読み取って<br>お気に入りを登録しよう！</p></div>';return}box.innerHTML='';spots.forEach((s,i)=>{const el=document.createElement('article');el.className='spot';el.innerHTML='<button class="edit" aria-label="更新">✎</button><img src="icons/icon-192.png" alt=""><strong></strong><small></small>';el.querySelector('strong').textContent=s.name;el.querySelector('small').textContent=host(s.url);let timer;el.onpointerdown=e=>{if(e.target.closest('.edit'))return;timer=setTimeout(()=>{if(confirm('「'+s.name+'」を削除しますか？')){const a=get();a.splice(i,1);put(a);render()}},650)};['pointerup','pointerleave','pointercancel'].forEach(n=>el.addEventListener(n,()=>clearTimeout(timer)));el.onclick=e=>{if(e.target.closest('.edit'))return;if(awardCoin(s.url))render();location.href=s.url};el.querySelector('.edit').onclick=e=>{e.stopPropagation();editing=i;$('#file').click()};box.append(el)})}
+    function handleUrl(url){pending=url;if(editing>=0){const a=get();a[editing].url=pending;put(a);editing=-1;render();return}$('#url').textContent=pending;$('#dialog').showModal();$('#name').focus()}
+    async function scan(file){if(!file)return;const isHeic=/\.(heic|heif)$/i.test(file.name)||/image\/(heic|heif)/i.test(file.type);if(isHeic&&window.heic2any){const converted=await heic2any({blob:file,toType:'image/jpeg',quality:.9});file=new File([Array.isArray(converted)?converted[0]:converted],'qr-photo.jpg',{type:'image/jpeg'})}const image=await createImageBitmap(file,{imageOrientation:'from-image'}),canvas=$('#canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true}),scale=Math.min(1,1600/Math.max(image.width,image.height));canvas.width=Math.round(image.width*scale);canvas.height=Math.round(image.height*scale);ctx.drawImage(image,0,0,canvas.width,canvas.height);image.close();const code=jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height,{inversionAttempts:'attemptBoth'});if(!code||!/^https?:\/\//i.test(code.data)){alert('URLのQRコードが見つかりませんでした。');return}handleUrl(code.data)}
+    async function startCamera(){const modal=$('#scanner'),video=$('#camera-video');try{cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});video.srcObject=cameraStream;modal.showModal();await video.play();scanning=true;scanCamera()}catch(err){alert('カメラを起動できませんでした。ブラウザのカメラ許可を確認してください。');stopCamera()}}
+    function stopCamera(){scanning=false;if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}const modal=$('#scanner');if(modal.open)modal.close()}
+    function scanCamera(){if(!scanning)return;const video=$('#camera-video'),canvas=$('#canvas');if(video.readyState>=2){const ctx=canvas.getContext('2d',{willReadFrequently:true});canvas.width=video.videoWidth;canvas.height=video.videoHeight;ctx.drawImage(video,0,0,canvas.width,canvas.height);const code=jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height,{inversionAttempts:'attemptBoth'});if(code&&/^https?:\/\//i.test(code.data)){stopCamera();handleUrl(code.data);return}}requestAnimationFrame(scanCamera)}
+    const choose=e=>{scan(e.target.files[0]).catch(()=>alert('画像を読み込めませんでした。'));e.target.value=''};
+    $('#url-add').onclick=()=>{editing=-1;$('#url-dialog').showModal();$('#manual-url').focus()};$('#save-url').onclick=()=>{const url=$('#manual-url').value.trim();if(!/^https?:\/\//i.test(url)){alert('https:// から始まるURLを入力してください。');return}$('#manual-url').value='';$('#url-dialog').close();handleUrl(url)};$('#cancel-url').onclick=()=>$('#url-dialog').close();$('#add').onclick=()=>{editing=-1;$('#file').click()};$('#camera-add').onclick=()=>{editing=-1;startCamera()};$('#file').onchange=choose;$('#camera').onchange=choose;$('#close-camera').onclick=stopCamera;$('#scanner').addEventListener('close',()=>{if(cameraStream)stopCamera()});
+    $('#save').onclick=()=>{const name=$('#name').value.trim();if(!name)return $('#name').focus();const spots=get();spots.push({name,url:pending});put(spots);$('#name').value='';$('#dialog').close();render()};$('#cancel').onclick=()=>$('#dialog').close();
+    const rewardKey='omise-pocket-rewards',defaultRewards=[{id:'snack',name:'ちいさな ごほうび',cost:30},{id:'gacha',name:'ガチャガチャ 1回無料券',cost:150},{id:'special',name:'スペシャルな ごほうび',cost:200}];
+    const safe=s=>String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    function getRewards(){try{const r=JSON.parse(localStorage.getItem(rewardKey)||'null');return Array.isArray(r)?r:defaultRewards}catch{return defaultRewards}}
+    function issueTicket(name){const list=getTickets();list.push({id:Date.now(),name,status:'available',date:today()});putTickets(list)}
+    function redeemReward(id){const reward=getRewards().find(r=>r.id===id);if(!reward||getCoins()<reward.cost)return;setCoins(getCoins()-reward.cost);issueTicket(reward.name);render();$('#reward-dialog').close()}
+    function renderRewardCatalog(){const coins=getCoins(),box=$('#reward-list');box.innerHTML=getRewards().map(r=>`<div class="swipe-wrap" style="margin:8px 0"><span class="swipe-note" style="flex:1">${safe(r.name)}<br><small>⭐ ${r.cost}</small></span><button class="exchange redeem-reward" data-id="${r.id}" ${coins<r.cost?'disabled':''}>交換</button></div>`).join('');box.querySelectorAll('.redeem-reward').forEach(b=>b.onclick=()=>redeemReward(b.dataset.id))}
+    function renderTickets(){const coins=getCoins(),tickets=getTickets(),box=$('#tickets');let html=`<div class="reward-head"><button class="exchange" id="exchange" ${coins<150?'disabled':''}>150コインで交換</button></div>`;if(!tickets.length)html+='<div class="ticket-empty">コインをためると、ごほうびチケットに交換できるよ。</div>';tickets.slice().reverse().forEach(t=>{const used=t.status==='used'||t.used;const name=safe(t.name||'ガチャガチャ 1回無料券');html+=`<article class="ticket ${used?'used':''}"><div class="ticket-top"><span>🎟 ${name}</span>${used?'<span class="used-label">使用済み</span>':'<span>FREE</span>'}</div><div class="ticket-sub">${t.date||today()} ・ No.${t.id||t.serial}</div><div class="swipe-wrap"><span class="swipe-note">${used?'このチケットは使用済み':'右へスワイプして使用'}</span><input class="swipe" type="range" min="0" max="100" value="0" ${used?'disabled':''} data-id="${t.id||t.serial}" aria-label="チケットを使用済みにする"></div></article>`});box.innerHTML=html;$('#exchange').onclick=()=>redeemReward('gacha');box.querySelectorAll('.swipe').forEach(slider=>slider.onchange=e=>{if(Number(e.target.value)>=90){const list=getTickets(),ticket=list.find(t=>String(t.id||t.serial)===e.target.dataset.id);if(ticket){ticket.status='used';ticket.used=true;putTickets(list);render()}}else e.target.value=0})}
+    $('#coin-badge').onclick=()=>{renderRewardCatalog();$('#reward-dialog').showModal()};$('#close-rewards').onclick=()=>$('#reward-dialog').close();
+    if('serviceWorker'in navigator){let refreshed=false;navigator.serviceWorker.register('./sw.js').then(reg=>{reg.update();reg.addEventListener('updatefound',()=>{const worker=reg.installing;if(worker)worker.addEventListener('statechange',()=>{if(worker.state==='installed'&&navigator.serviceWorker.controller)worker.postMessage({type:'SKIP_WAITING'})})})});navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshed){refreshed=true;location.reload()}})}render();
+  </script>
+</body>
+</html>
